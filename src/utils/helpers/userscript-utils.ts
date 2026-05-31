@@ -1,7 +1,7 @@
 import { GM_addValueChangeListener, GM_deleteValue, GM_getValue, GM_listValues, GM_setValue, GmValueListenerId } from "$";
 import { ref, watch } from "vue";
 import { detectDom, type HintedString } from "..";
-import { logger as globalLogger } from "./js-utils"
+import { globalLogger } from "./js-utils"
 
 const logger = globalLogger.withPath('userscript-utils');
 

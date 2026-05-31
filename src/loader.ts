@@ -1,4 +1,4 @@
-import { logger as globalLogger, testChecker, URLChangeMonitor } from '@/utils';
+import { globalLogger, testChecker, URLChangeMonitor } from '@/utils';
 import * as modules from '@/modules';
 export { modules };
 

@@ -276,8 +276,8 @@ class Logger {
     }
 }
 
-export const logger = new Logger();
-logger.level = import.meta.env.PROD ? Logger.Level.Info : Logger.Level.Debug;
+export const globalLogger = new Logger();
+globalLogger.level = import.meta.env.PROD ? Logger.Level.Info : Logger.Level.Debug;
 
 /**
  * 深度比较两个值是否相等（值相等，不要求引用相等）

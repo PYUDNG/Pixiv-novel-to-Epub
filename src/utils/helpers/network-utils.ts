@@ -1,6 +1,13 @@
 import { GM_xmlhttpRequest, GmXmlhttpRequestOption, GmResponseTypeMap, GM_download, GmDownloadOptions } from "$";
 
 /**
+ * Aborted标志  
+ * 当网络请求被abort时，返回的Promise将以此Symbol值为原因reject  
+ * 用于在请求被reject时判断是否为abort，还是普通地出现了请求或者代码错误
+ */
+export const AbortSymbol: unique symbol = Symbol('Request Aborted');
+
+/**
  * 以Promise或async/await语法调用的GM_xmlhttpRequest
  * @param options {@link GM_xmlhttpRequest}的options参数
  * @param signal 一个{@link AbortSignal}，当被abort时abort请求
@@ -25,7 +32,7 @@ export function request<
             options.onerror?.call(this, response);
         },
         onabort() {
-            reject();
+            reject(AbortSymbol);
             options.onabort?.();
         },
     });

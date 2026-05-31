@@ -55,76 +55,46 @@
 }
 
 @layer components {
-  .serverity-normal {
-    background-color: var(--color-surface-500);
+  .serverity-normal,
+  .serverity-primary,
+  .serverity-secondary,
+  .serverity-success,
+  .serverity-warn,
+  .serverity-error {
+    background-color: var(--severity-color-light);
     @variant hover {
-      background-color: var(--color-surface-600);
+      background-color: color-mix(in srgb, var(--severity-color-light), #000 5%);
     }
     @variant dark {
-      background-color: var(--color-surface-500);
+      background-color: var(--severity-color-dark);
     }
     @variant dark:hover {
-      background-color: var(--color-surface-400);
+      background-color: color-mix(in srgb, var(--severity-color-dark), #fff 10%);
     }
+  }
+
+  .serverity-normal {
+    --severity-color-light: var(--color-surface-300);
+    --severity-color-dark: var(--color-surface-500);
   }
   .serverity-primary {
-    background-color: var(--color-primary-500);
-    @variant hover {
-      background-color: var(--color-primary-600);
-    }
-    @variant dark {
-      background-color: var(--color-primary-500);
-    }
-    @variant dark:hover {
-      background-color: var(--color-primary-400);
-    }
+    --severity-color-light: var(--color-primary-300);
+    --severity-color-dark: var(--color-primary-500);
   }
   .serverity-secondary {
-    background-color: var(--color-secondary-500);
-    @variant hover {
-      background-color: var(--color-secondary-600);
-    }
-    @variant dark {
-      background-color: var(--color-secondary-500);
-    }
-    @variant hover {
-      background-color: var(--color-secondary-400);
-    }
+    --severity-color-light: var(--color-secondary-300);
+    --severity-color-dark: var(--color-secondary-500);
   }
   .serverity-success {
-    background-color: var(--color-green-500);
-    @variant hover {
-      background-color: var(--color-green-600);
-    }
-    @variant dark {
-      background-color: var(--color-green-500);
-    }
-    @variant dark:hover {
-      background-color: var(--color-green-400);
-    }
+    --severity-color-light: var(--color-green-300);
+    --severity-color-dark: var(--color-green-500);
   }
   .serverity-warn {
-    background-color: var(--color-yellow-500);
-    @variant hover {
-      background-color: var(--color-yellow-600);
-    }
-    @variant dark {
-      background-color: var(--color-yellow-500);
-    }
-    @variant dark:hover {
-      background-color: var(--color-yellow-400);
-    }
+    --severity-color-light: var(--color-yellow-300);
+    --severity-color-dark: var(--color-yellow-500);
   }
   .serverity-error {
-    background-color: var(--color-red-500);
-    @variant hover {
-      background-color: var(--color-red-600);
-    }
-    @variant dark {
-      background-color: var(--color-red-500);
-    }
-    @variant dark:hover {
-      background-color: var(--color-red-400);
-    }
+    --severity-color-light: var(--color-red-300);
+    --severity-color-dark: var(--color-red-500);
   }
 }
