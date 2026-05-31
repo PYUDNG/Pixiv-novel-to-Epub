@@ -3,19 +3,35 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "author": {
+    "name": "PY-DNG"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "check": "npx vue-tsc --noEmit --project tsconfig.app.json",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "mitt": "^3.0.1",
+    "tailwindcss": "^4.3.0",
     "vue": "^3.5.34"
   },
   "devDependencies": {
+    "@iconify-json/material-symbols": "^1.2.75",
+    "@types/node": "^25.9.1",
+    "@types/postcss-url": "^10.0.4",
     "@vitejs/plugin-vue": "^6.0.6",
+    "cssnano": "^8.0.1",
+    "postcss-rem-to-responsive-pixel": "^7.0.4",
+    "postcss-url": "^10.1.4",
     "typescript": "^6.0.3",
+    "unplugin-icons": "^23.0.1",
     "vite": "^8.0.11",
     "vite-plugin-monkey": "^8.0.0",
+    "vue-component-type-helpers": "^3.3.2",
+    "vue-i18n": "^11.4.4",
     "vue-tsc": "^3.2.8"
   }
 }

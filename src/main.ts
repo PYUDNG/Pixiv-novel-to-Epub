@@ -1,11 +1,17 @@
-import { createApp } from 'vue';
+import './hooks.ts';
 import './style.css';
-import App from './App.vue';
+import './styling.ts';
+import './loader.ts';
+import { prompt, alert } from './utils/index.ts';
 
-createApp(App).mount(
-  (() => {
-    const app = document.createElement('div');
-    document.body.append(app);
-    return app;
-  })(),
-);
+const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+const nickname = await prompt('设定你的昵称：', {
+    header: '昵称选择',
+    value: '张三',
+    dark: dark,
+});
+nickname && alert(`欢迎你，${ nickname }！`, {
+    header: '昵称选择',
+    seamless: true,
+    dark: dark,
+});
