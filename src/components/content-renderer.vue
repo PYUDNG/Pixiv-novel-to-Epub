@@ -1,7 +1,7 @@
 <!-- 渲染 string | DisplayContent 类型的内容的组件 -->
 
 <script setup lang="ts">
-import type { DisplayContent } from '../../../../types';
+import type { DisplayContent } from '@/utils';
 
 const props = defineProps<{
     content: string | DisplayContent;

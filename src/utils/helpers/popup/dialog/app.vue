@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, ref, useTemplateRef } from 'vue';
 import type { DisplayContent } from '../../../types/index.ts';
-import ContentRenderer from './components/content-renderer.vue';
+import ContentRenderer from '@/components/content-renderer.vue';
 import { OVERLAY_CONTAINER_KEY, OVERLAY_SHADOWHOST_KEY } from '../../ui-utils.ts';
 import type { ButtonProps } from '@/components/button.vue';
 import Button from '@/components/button.vue';

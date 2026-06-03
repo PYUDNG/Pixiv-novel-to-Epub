@@ -858,3 +858,12 @@ export function toPurePlainObject<T>(value: T): DeepUnwrap<T> {
     // 6. 基本数据类型 (string, number, boolean, symbol, undefined) 直接返回
     return value as DeepUnwrap<T>;
 }
+
+/**
+ * 获取当前URL参数值
+ * @param name URL参数键名
+ */
+export function getUrlArgv(name: string) {
+    const params = new URLSearchParams(location.search);
+    return params.get(name);
+}

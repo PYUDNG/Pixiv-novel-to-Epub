@@ -1,4 +1,12 @@
 export default {
+    novel: {
+        download: '下载Epub',
+    },
+    downloader: {
+        epub: {
+            link: '小说链接：{link}'
+        },
+    },
     popup: {
         dialog: {
             alert: {

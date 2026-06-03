@@ -246,7 +246,7 @@ export function isMobileAgent() {
  * 创建一个响应式的系统深色模式状态
  * 无论在 Vue 组件内还是组件外执行，都能实时同步系统主题
  */
-export function createDarkModeRef(): Ref<boolean> {
+export function useSystemDark(): Ref<boolean> {
   // 1. 定义媒体查询字符串
   const mediaQueryString = '(prefers-color-scheme: dark)';
 
@@ -281,4 +281,41 @@ export function createDarkModeRef(): Ref<boolean> {
 /**
  * 响应式状态：系统是否开启深色模式
  */
-export const isSystemDark = createDarkModeRef();
+export const isSystemDark = useSystemDark();
+
+/**
+ * 组合式函数：实时监听 document.documentElement 的 data-theme 属性
+ * @returns {Ref<boolean>} 如果 data-theme 为 'dark' 则返回 true，否则返回 false
+ */
+export function usePixivDark(): Ref<boolean> {
+    // 1. 定义内部辅助函数：判断当前是否为深色模式
+    const isDarkHtml = (): boolean => {
+        return document.documentElement.getAttribute('data-theme') === 'dark';
+    };
+
+    // 2. 初始化 Ref 值
+    const isDark = ref<boolean>(isDarkHtml());
+
+    // 3. 创建 MutationObserver 监听属性变化
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                isDark.value = isDarkHtml();
+            }
+        }
+    });
+
+    // 4. 开始监听 html 标签的 attributes 变化
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'], // 只关心 data-theme 属性，优化性能
+    });
+
+    return isDark;
+}
+
+// 在 Vue 文件外直接执行并导出单例，确保全局共享同一个状态
+/**
+ * 响应式状态：Pixiv页面是否开启深色模式
+ */
+export const isPixivDark = usePixivDark();

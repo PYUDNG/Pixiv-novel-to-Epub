@@ -5,12 +5,6 @@ const PIXIV_API_BASEURL = 'https://www.pixiv.net';
 const PIXIV_HOST = 'www.pixiv.net';
 const PIXIV_DEFAULT_REFERRER = 'https://www.pixiv.net';
 
-// API 特殊返回值
-/** API请求被主动取消 */
-const API_ABORT_SYMBOL: unique symbol = Symbol('API Request Aborted');
-/** API请求经过最大尝试次数后仍然错误 */
-const API_ERROR_SYMBOL: unique symbol = Symbol('API Request Error');
-
 /** 包括初始尝试和所有重试在内，最大尝试次数 */
 const MAX_API_TRIES = 3;
 
@@ -27,21 +21,19 @@ const queue = new Queue();
  */
 const cache = new Map<string, any>();
 
-export const api = async (
+export const api = async <
+    T = JsonValue,
+>(
     ...args: Parameters<typeof _api>
-): Promise<
-    | Awaited<ReturnType<typeof _api>>
-    | typeof API_ABORT_SYMBOL
-    | typeof API_ERROR_SYMBOL
-> => {
+): Promise<T | typeof AbortSymbol> => {
     // 带错误重试地排队执行请求
     for (let n = 1; n <= MAX_API_TRIES; n++) {
         try {
             // 排队执行请求
-            return await queue.enqueue(() => _api(...args));
+            return await queue.enqueue(() => _api<T>(...args));
         } catch(err) {
             // 当主动Abort时不重试，返回 API Aborted 标志
-            if (err === AbortSymbol) return API_ABORT_SYMBOL;
+            if (err === AbortSymbol) return AbortSymbol;
 
             // 错误重试，直到尝试次数用尽
             logger.simple('Error', `api request error (try #${n})`);
@@ -49,18 +41,24 @@ export const api = async (
         }
     }
 
-    // 用尽尝试次数依然报错，返回 API Error 标志
-    return API_ERROR_SYMBOL;
+    // 用尽尝试次数依然报错，抛出错误
+    throw new Error('error after all retries');
 }
 
 // 定义任意JSON类型API返回值
-type JSONPrimitive = string | number | boolean | null;
-type JSONArray = BasicResponseObject[];
+type JsonValue =
+    | string
+    | number
+    | boolean
+    | null
+    | JsonObject
+    | JsonArray;
 
-/**
- * 任意JSON类型API返回值
- */
-export type BasicResponseObject = JSONPrimitive | JSONArray | { [key: string]: BasicResponseObject };
+type JsonObject = {
+    [key: string]: JsonValue;
+};
+
+type JsonArray = JsonValue[];
 
 /**
  * Pixiv API网络请求
@@ -69,18 +67,20 @@ export type BasicResponseObject = JSONPrimitive | JSONArray | { [key: string]: B
  * @param signal 请求终止信号
  * @returns API返回值，或者`AbortSymbol`代表请求被主动取消，或者
  */
-async function _api(
+async function _api<
+    T = JsonValue,
+>(
     pathname: string,
     params: Record<string, string> = {},
     signal?: AbortSignal,
-): Promise<BasicResponseObject> {
+): Promise<T> {
     const url = toAbsURL(pathname, params);
     
     // 检查缓存
     if (cache.has(url)) return cache.get(url);
 
     // 执行请求
-    let result: BasicResponseObject;
+    let result: T;
     try {
         result = await requestJson({
             method: 'GET', url,

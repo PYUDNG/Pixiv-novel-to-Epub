@@ -12,7 +12,7 @@ export interface Module<C = undefined> {
     /**
      * 模块的用户可见名称
      */
-    name: string,
+    name?: string,
 
     /**
      * 多个checker之间的关系：
