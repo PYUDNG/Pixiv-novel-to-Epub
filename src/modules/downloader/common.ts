@@ -27,8 +27,19 @@ const queueBlob = new Queue({
  * 异步任务选项
  */
 export interface AsyncOptions {
+    /**
+     * 异步任务终止信号
+     */
     signal?: AbortSignal;
+
+    /**
+     * 任务产生进度回调
+     */
     onProgress?: Function;
+
+    /**
+     * 任务完成回调
+     */
     onComplete?: Function;
 }
 

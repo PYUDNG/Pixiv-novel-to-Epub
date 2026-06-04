@@ -2,7 +2,7 @@ import './hooks.ts';
 import './style.css';
 import './styling.ts';
 import './loader.ts';
-import { prompt, alert } from './utils/index.ts';
+// import { prompt, alert } from './utils/index.ts';
 
 // const dark = document.documentElement.getAttribute('data-theme') === 'dark';
 // const nickname = await prompt('设定你的昵称：', {
