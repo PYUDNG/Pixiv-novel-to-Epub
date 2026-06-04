@@ -45,11 +45,13 @@ export async function downloadNovel(id: string | number, signal?: AbortSignal): 
         tags: false,
     });
 
-    // 封面图
-    await loadCover(epub, data.body.coverUrl, signal);
-
-    // 加载图片资源
-    await loadImages(epub, images, signal);
+    // 异步操作
+    await Promise.all([
+        // 加载封面图
+        loadCover(epub, data.body.coverUrl, signal),
+        // 加载图片资源
+        loadImages(epub, images, signal),
+    ]);
 
     // 添加章节内容
     epub.add(title, html);
