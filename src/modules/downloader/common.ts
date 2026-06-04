@@ -1,4 +1,4 @@
-import { AbortSymbol, globalLogger, htmlEncode, requestBlob } from "@/utils";
+import { AbortSymbol, globalLogger, htmlEncode, Queue, requestBlob } from "@/utils";
 import { NovelAPIBody } from "../api/novel/types";
 import i18n, { i18nKeys } from "@/i18n";
 import jEpub from "jepub";
@@ -14,6 +14,23 @@ const MAX_REQUEST_TRIES = 3;
 const logger = globalLogger.withPath('downloader');
 const { t } = i18n.global;
 const $downloader = i18nKeys.$downloader;
+
+/**
+ * 下载blob资源的队列
+ */
+const queueBlob = new Queue({
+    max: 5,
+    sleep: 0,
+});
+
+/**
+ * 异步任务选项
+ */
+export interface AsyncOptions {
+    signal?: AbortSignal;
+    onProgress?: Function;
+    onComplete?: Function;
+}
 
 export type NovelImage = ({
     /** 小说封面图 */
@@ -233,14 +250,15 @@ export function parseContent(
  * @param images 图片列表
  * @param signal 请求终止信号
  */
-export async function loadImages(epub: jEpub, images: NovelImage[], signal?: AbortSignal) {
-    return Promise.all(images.map(async image => {
+export async function loadImages(epub: jEpub, images: NovelImage[], { signal, onProgress, onComplete }: AsyncOptions = {}) {
+    await Promise.all(images.map(async image => {
         switch (image.type) {
             case 'cover':
             case 'embedded': {
                 const blob = await getPixivBlob(image.url, signal);
                 if (blob === AbortSymbol) return;
                 epub.image(blob, image.epubImageId);
+                onProgress?.();
                 break;
             }
             case 'inserted': {
@@ -249,10 +267,12 @@ export async function loadImages(epub: jEpub, images: NovelImage[], signal?: Abo
                 const blob = await getPixivBlob(data.body[image.id].illust.images.original);
                 if (blob === AbortSymbol) return;
                 epub.image(blob, image.epubImageId);
+                onProgress?.();
                 break;
             }
         }
     }));
+    onComplete?.();
 }
 
 /**
@@ -261,10 +281,12 @@ export async function loadImages(epub: jEpub, images: NovelImage[], signal?: Abo
  * @param url 封面图url
  * @param signal 请求终止信号
  */
-export async function loadCover(epub: jEpub, url: string, signal?: AbortSignal): Promise<void> {
+export async function loadCover(epub: jEpub, url: string, { signal, onProgress, onComplete }: AsyncOptions = {}): Promise<void> {
     const blob = await getPixivBlob(url, signal);
     if (blob === AbortSymbol) return;
     epub.cover(blob);
+    onProgress?.();
+    onComplete?.();
 }
 
 /**
@@ -276,13 +298,16 @@ async function getPixivBlob(url: string, signal?: AbortSignal): Promise<Blob | t
     // 带错误重试的网络请求：默认重试，不需要重试时使用break跳出
     for (let n = 1; n <= MAX_REQUEST_TRIES; n++) {
         try {
-            return await requestBlob({
-                method: 'GET', url,
-                headers: {
-                    referrer: location.host === PIXIV_HOST ? location.href : PIXIV_DEFAULT_REFERRER,
-                    host: PIXIV_HOST,
-                },
-            }, signal);
+            return await queueBlob.enqueue(
+                () => requestBlob({
+                    method: 'GET', url,
+                    headers: {
+                        referrer: location.host === PIXIV_HOST ? location.href : PIXIV_DEFAULT_REFERRER,
+                        host: PIXIV_HOST,
+                    },
+                }, signal),
+                signal,
+            );
         } catch(err) {
             // 主动取消时跳出重试逻辑
             if (err === AbortSymbol) return AbortSymbol;

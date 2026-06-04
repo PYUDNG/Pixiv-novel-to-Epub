@@ -4,8 +4,17 @@ export default {
     },
     downloader: {
         epub: {
-            link: '小说链接：{link}'
+            link: '小说链接：{link}',
         },
+        novel: {
+            progress: {
+                api: '小说数据',
+                cover: '封面图',
+                images: '插图',
+                generate: '合成Epub文件',
+                save: '保存Epub文件',
+            },
+        }
     },
     popup: {
         dialog: {

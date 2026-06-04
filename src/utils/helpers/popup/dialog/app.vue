@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { inject, ref, useTemplateRef } from 'vue';
-import type { DisplayContent } from '../../../types/index.ts';
+import type { DisplayContent } from '../../../types';
 import ContentRenderer from '@/components/content-renderer.vue';
-import { OVERLAY_CONTAINER_KEY, OVERLAY_SHADOWHOST_KEY } from '../../ui-utils.ts';
+import { OVERLAY_CONTAINER_KEY, OVERLAY_SHADOWHOST_KEY } from '../../shadowapp';
 import type { ButtonProps } from '@/components/button.vue';
 import Button from '@/components/button.vue';
-import { addEventListener } from '@/hooks.ts';
+import { addEventListener } from '@/hooks';
 import MaterialSymbolsClose from '~icons/material-symbols/close';
 
 interface Button extends ButtonProps {
@@ -17,7 +17,16 @@ interface Button extends ButtonProps {
 }
 
 // #region Props
-const props = withDefaults(defineProps<{
+const {
+    header = '',
+    content = '',
+    seamless = false,
+    backdropDismiss = true,
+    width = 130,
+    height = 'fit-content',
+    zIndex = 1000,
+    buttons = [],
+} = defineProps<{
     /**
      * 标题
      * @default ''
@@ -69,16 +78,7 @@ const props = withDefaults(defineProps<{
      * @default []
      */
     buttons?: Button[];
-}>(), {
-    header: '',
-    content: '',
-    seamless: false,
-    backdropDismiss: true,
-    width: 130,
-    height: 'fit-content',
-    zIndex: 1000,
-    buttons: () => [],
-});
+}>();
 // #endregion
 
 // #region inject环境变量
@@ -323,8 +323,8 @@ defineExpose({ show, hide, toggle, destroy });
         <div
             v-if="!seamless"
             class="
-                fixed top-0 left-0 w-full h-full
-                bg-black opacity-40
+                fixed top-0 left-0 w-screen h-screen
+                bg-[color-mix(in_srgb,black_40%,transparent)]
             "
             :style="{
                 zIndex: zIndex

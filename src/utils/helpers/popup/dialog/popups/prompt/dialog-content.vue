@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import type { DisplayContent } from '@/utils/types';
-import ContentRenderer from '../../components/content-renderer.vue';
+import ContentRenderer from '@/components/content-renderer.vue';
 import { inject } from 'vue';
 import { userInputKey } from './utils.ts';
 

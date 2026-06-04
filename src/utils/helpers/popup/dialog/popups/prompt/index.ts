@@ -1,10 +1,12 @@
 import i18n, { i18nKeys } from "@/i18n/index.ts";
 import type { Nullable, DisplayContent } from "../../../../../types/index.ts";
-import { createShadowApp, isSystemDark } from "../../../../ui-utils.ts";
+import { isSystemDark } from "../../../../ui-utils.ts";
 import App from '../../app.vue';
 import DialogContent from "./dialog-content.vue";
-import { computed, ref, watch } from "vue";
+import { computed, isRef, ref, watch } from "vue";
 import { userInputKey } from "./utils.ts";
+import type { Ref } from 'vue';
+import { createShadowApp } from "../../../../shadowapp.ts";
 
 const { t } = i18n.global;
 const $dialog = i18nKeys.$popup.$dialog;
@@ -14,7 +16,7 @@ export interface PromptOptions {
      * 深色模式
      * @default 'auto'
      */
-    dark?: boolean | 'auto';
+    dark?: Ref<boolean> | boolean | 'auto';
 
     /**
      * 标题文字
@@ -50,7 +52,10 @@ const DEFAULT_OPTIONS: Required<PromptOptions> = {
 export async function prompt(content: string | DisplayContent, options: PromptOptions = {}) {
     // 参数处理
     const fullOptions = Object.assign(DEFAULT_OPTIONS, options);
-    const isDark = computed(() => fullOptions.dark === 'auto' ? isSystemDark.value : fullOptions.dark);
+    const isDark = computed(() => fullOptions.dark === 'auto' ?
+        isSystemDark.value :
+        isRef(fullOptions.dark) ? fullOptions.dark.value : fullOptions.dark
+    );
     watch(isDark, dark => dark ? container.classList.add('dark') : container.classList.remove('dark'));
 
     // 返回值
