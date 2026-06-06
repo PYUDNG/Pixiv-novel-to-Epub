@@ -1,7 +1,7 @@
 import { Task } from "./types";
 import { isSystemDark } from "../../ui-utils.ts";
 import { computed, isRef, watch } from "vue";
-import type { Ref } from 'vue';
+import type { Component, Ref } from 'vue';
 import App from "./app.vue";
 import { createShadowApp } from "../../shadowapp.ts";
 
@@ -52,4 +52,16 @@ export async function progress(tasks: Task[], options: ProgressOptions = {}) {
     });
 
     return root;
+}
+
+export function newTask(name: string, icon: Component, total: number): Task {
+    return {
+        name, icon,
+        progress: {
+            total,
+            finished: 0,
+            complete: false,
+            error: false,
+        },
+    };
 }

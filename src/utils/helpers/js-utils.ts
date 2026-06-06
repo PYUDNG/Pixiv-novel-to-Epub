@@ -568,6 +568,87 @@ export class Queue {
 }
 
 /**
+ * 将一系列回调函数调用转化为AsyncGenerator的队列
+ */
+export class AsyncQueue<T> {
+  private queue: T[] = [];
+  private resolvers: ((value: IteratorResult<T>) => void)[] = [];
+  private closed = false;
+
+  // 由回调函数调用：向队列中推送新数据
+  push(value: T) {
+    if (this.closed) return;
+    if (this.resolvers.length > 0) {
+      const resolve = this.resolvers.shift()!;
+      resolve({ value, done: false });
+    } else {
+      this.queue.push(value);
+    }
+  }
+
+  // 由回调函数调用：通知队列流已结束
+  close() {
+    this.closed = true;
+    while (this.resolvers.length > 0) {
+      const resolve = this.resolvers.shift()!;
+      resolve({ value: undefined as any, done: true });
+    }
+  }
+
+  // 让队列本身具备异步迭代器接口
+  [Symbol.asyncIterator](): AsyncIterator<T> {
+    return {
+      next: (): Promise<IteratorResult<T>> => {
+        if (this.queue.length > 0) {
+          return Promise.resolve({ value: this.queue.shift()!, done: false });
+        }
+        if (this.closed) {
+          return Promise.resolve({ value: undefined as any, done: true });
+        }
+        return new Promise<IteratorResult<T>>((resolve) => {
+          this.resolvers.push(resolve);
+        });
+      }
+    };
+  }
+}
+
+/**
+ * 将多个异步迭代器合并为一个，实现并发消费
+ */
+export async function* mergeAsyncGenerators<
+    T, TResult, TNext
+>(...generators: AsyncGenerator<T, TResult, TNext>[]) {
+    // 启动所有的生成器，拿到它们的迭代器对象
+    const iterators = generators.map(g => g[Symbol.asyncIterator]());
+    
+    // 存储每个迭代器当前正在等待的 next() 承诺
+    const nextPromises: (Promise<{
+        index: number;
+        result: IteratorResult<T, TResult>;
+    }> | null)[] = iterators.map((iter, index) => 
+        iter.next().then(result => ({ index, result }))
+    );
+
+    let activeCount = iterators.length;
+
+    while (activeCount > 0) {
+        // 谁跑得快，就先响应谁
+        const { index, result } = await Promise.race(nextPromises.filter(p => p !== null));
+
+        if (result.done) {
+            activeCount--;
+            nextPromises[index] = null; // 该迭代器已结束，不再参与 race
+        } else {
+            // 产出该迭代器吐出来的状态
+            yield result.value;
+            // 接着让该迭代器持续跑下一步
+            nextPromises[index] = iterators[index].next().then(res => ({ index, result: res }));
+        }
+    }
+}
+
+/**
  * 块接口：用于区分普通文本和已替换的固定内容
  */
 export interface TextChunk {
@@ -723,6 +804,33 @@ export function safeSerialize(val: any, depth = 5, visited = new WeakSet()): any
         }
     }
     return res;
+}
+
+/**
+ * 将给定文件名中的特殊字符进行替换以确保该文件名可以保存文件
+ * @param filename 原始文件名
+ * @returns 替换后的文件名
+ */
+export function escapeFilename(filename: string) {
+    /**
+     * 文件名非法字符与对应的全角字符映射表  
+     * 目前只有windows版本，MacOS和Linux待补充
+     */
+    const replacements: Readonly<Record<string, string>> = {
+        '<': '＜',
+        '>': '＞',
+        ':': '：',
+        '"': '＂',
+        '/': '／',
+        '\\': '＼',
+        '|': '｜',
+        '?': '？',
+        '*': '＊',
+    };
+    for (const [from, to] of Object.entries(replacements)) {
+        filename = filename.replaceAll(from, to);
+    }
+    return filename;
 }
 
 /**

@@ -5,6 +5,7 @@ import { computed, inject } from 'vue';
 import { Task } from './types';
 import MaterialSymbolsProgressActivity from '~icons/material-symbols/progress-activity';
 import MaterialSymbolsCheck from '~icons/material-symbols/check';
+import MaterialSymbolsCloseRounded from '~icons/material-symbols/close-rounded';
 import { TRANSITION_DURATION_KEY } from '../../shadowapp';
 
 const { task } = defineProps<{
@@ -46,6 +47,7 @@ const percent = computed(() => Math.floor(task.progress.finished / task.progress
 
             <!-- 右侧完成状态图标 -->
             <MaterialSymbolsCheck v-if="task.progress.complete" class="text-green-600 dark:text-green-600" />
+            <MaterialSymbolsCloseRounded v-else-if="task.progress.error" class="text-red-600 dark:text-red-600" />
             <MaterialSymbolsProgressActivity v-else class="animate-spin" />
         </div>
 

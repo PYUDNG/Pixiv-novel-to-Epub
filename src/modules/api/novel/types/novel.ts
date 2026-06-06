@@ -81,7 +81,14 @@ export interface NovelAPIExtraMeta {
         title: string;
         type: string;
     };
+    twitter: {
+        description: string;
+        image: string;
+        title: string;
+        card: string;
+    };
 }
+
 export interface NovelEmbeddedImage {
     novelImageId: string;
     sl: string;

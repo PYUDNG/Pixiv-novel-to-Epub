@@ -1,68 +1,131 @@
-import { AbortSymbol, globalLogger, isPixivDark, saveAs } from "@/utils";
-import { novel } from "../api";
+import { AbortSymbol, alert, AsyncQueue, escapeFilename, globalLogger, htmlEncode, isPixivDark, mergeAsyncGenerators, saveAs } from "@/utils";
+import { novel, series, seriesContent } from "../api";
 import { defineModule } from "../types";
 import i18n, { i18nKeys } from "@/i18n";
 import jEpub from "jepub";
-import { loadCover, loadImages, parseContent } from "./common";
-import { progress } from "@/utils/helpers/popup/progress";
+import { v4 as uuid } from "uuid";
+import { generateEpub, loadCover, loadImages, loadNovels, parseContent, saveBlob } from "./common";
+import { newTask, progress } from "@/utils/helpers/popup/progress";
 import MaterialSymbolsDataObject from '~icons/material-symbols/data-object';
+import MaterialSymbolsListAltOutline from '~icons/material-symbols/list-alt-outline'
 import MaterialSymbolsImageOutline from '~icons/material-symbols/image-outline'
 import MaterialSymbolsBook from '~icons/material-symbols/book';
+import MaterialSymbolsFileSaveOutline from '~icons/material-symbols/file-save-outline';
+import type { Component } from "vue";
+import { AysncProgressYields, tojEpubLang, withProgressYields } from "./utils";
+import { GM_info } from "$";
+import { SeriesContentAPIPageItem } from "../api/novel/types";
 
-const PROGRESS_UI_DESTROY_DELAY = 1000;
+const PROGRESS_UI_DESTROY_DELAY = 3000;
 
 const logger = globalLogger.withPath('downloader');
 const { t } = i18n.global;
-const $novel = i18nKeys.$downloader.$novel;
+const $downloader = i18nKeys.$downloader;
+const $progress = $downloader.$progress;
 
 export default defineModule({
     id: 'downloader',
 });
 
 /**
+ * 下载进度报告类型
+ */
+export type DownloadProgressType =
+    | 'novel-api'
+    | 'series-api'
+    | 'series-index'
+    | 'series-novel'
+    | 'cover'
+    | 'images'
+    | 'generate'
+    | 'save';
+
+/**
+ * 下载进度报告类型 - 进度UI名称 对照表
+ */
+export const TypeNameMap: Record<DownloadProgressType, string> = {
+    'novel-api': $progress.$novelApi,
+    'series-api': $progress.$seriesApi,
+    'series-index': $progress.$seriesIndex,
+    'series-novel': $progress.$seriesNovel,
+    cover: $progress.$cover,
+    images: $progress.$images,
+    generate: $progress.$generate,
+    save: $progress.$save,
+};
+
+/**
+ * 下载进度报告类型 - 进度UI图标 对照表
+ */
+export const TypeIconMap: Record<DownloadProgressType, Component> = {
+    'novel-api': MaterialSymbolsDataObject,
+    'series-api': MaterialSymbolsDataObject,
+    'series-index': MaterialSymbolsListAltOutline,
+    'series-novel': MaterialSymbolsBook,
+    cover: MaterialSymbolsImageOutline,
+    images: MaterialSymbolsImageOutline,
+    generate: MaterialSymbolsBook,
+    save: MaterialSymbolsFileSaveOutline,
+};
+
+/**
  * 下载单本小说为Epub
  * @param id 小说ID
  * @param signal 下载终止信号
+ * @returns 下载成功true，下载被取消false，出错时直接抛出错误
  */
-export async function downloadNovel(id: string | number, signal?: AbortSignal): Promise<void> {
-    // 进度UI
-    const p = await progress([], {
-        dark: isPixivDark,
-        seamless: true,
-    });
-    const $progress = $novel.$progress;
-
+export async function* downloadNovel(
+    id: string | number,
+    signal?: AbortSignal
+): AsyncGenerator<AysncProgressYields<DownloadProgressType>, boolean, void> {
     // 创建Epub
     const epub = new jEpub();
 
     // 获取小说数据
-    const pApi = p.add({
-        icon: MaterialSymbolsDataObject,
-        name: t($progress.$api),
-        progress: {
-            complete: false,
-            finished: 0,
-            total: 1,
-        },
-    });
+    const idData = uuid();
+    yield {
+        id: idData,
+        type: 'novel-api',
+        finished: 0,
+        total: 1,
+    };
     const data = await novel(id, signal);
-    if (data === AbortSymbol) {
+    if (data === AbortSymbol || signal?.aborted) {
         logger.simple('Info', 'download aborted');
-        p.destroy(PROGRESS_UI_DESTROY_DELAY);
-        return;
+        return false;
     }
-    p.progress(pApi);
-    p.complete(pApi);
+    yield {
+        id: idData,
+        type: 'novel-api',
+        finished: 1,
+        total: 1,
+    };
 
     // 初始化Epub
     epub.init({
-        i18n: data.body.language,
+        i18n: tojEpubLang(data.body.language),
         author: data.body.userName,
+        publisher: 'pixiv',
         title: data.body.title,
         description: data.body.description,
         tags: data.body.tags.tags.map(tag => tag.tag),
+        customMetadata: [{
+            name: 'dc:source',
+            value: data.body.extraData.meta.canonical,
+            renderInTitlePage(item) {
+                const htmlUrl = htmlEncode(item.value);
+                return `<div>${ t($downloader.$epub.$link, { link: htmlUrl }) }</div>`;
+            },
+        }],
     });
     epub.date(new Date(data.body.createDate));
+    epub.notes(t($downloader.$epub.$notes, {
+        link: htmlEncode(data.body.extraData.meta.canonical),
+        scriptUrl: htmlEncode(__GREASYFORK_URL__),
+        scriptName: htmlEncode(GM_info.script.name),
+        authorUrl: htmlEncode(__GREASYFORK_AUTHOR_URL__),
+        authorName: htmlEncode(GM_info.script.author),
+    }));
 
     // 解析内容
     const { html, title, images } = parseContent(data.body, {
@@ -74,38 +137,14 @@ export async function downloadNovel(id: string | number, signal?: AbortSignal): 
     });
 
     // 异步操作
-    const pCover = p.add({
-        name: t($progress.$cover),
-        icon: MaterialSymbolsImageOutline,
-        progress: {
-            complete: false,
-            finished: 0,
-            total: 1,
-        },
-    });
-    const pImages = p.add({
-        name: t($progress.$images),
-        icon: MaterialSymbolsImageOutline,
-        progress: {
-            complete: false,
-            finished: 0,
-            total: images.length,
-        },
-    });
-    await Promise.all([
+    yield* mergeAsyncGenerators<
+        AysncProgressYields<DownloadProgressType>, void | typeof AbortSymbol, void
+    >(
         // 加载封面图
-        loadCover(epub, data.body.coverUrl, {
-            signal,
-            onProgress: () => p.progress(pCover),
-            onComplete: () => p.complete(pCover),
-        }),
+        loadCover(epub, data.body.coverUrl, 'cover', signal),
         // 加载图片资源
-        loadImages(epub, images, {
-            signal,
-            onProgress: () => p.progress(pImages),
-            onComplete: () => p.complete(pImages),
-        }),
-    ]);
+        loadImages(epub, images, 'images', signal),
+    );
 
     // 添加章节内容
     epub.add(title, html);
@@ -113,45 +152,211 @@ export async function downloadNovel(id: string | number, signal?: AbortSignal): 
     // 由于jEpub.generate无法主动终止，因此提前检查下载终止信号
     if (signal?.aborted) {
         logger.simple('Info', 'download aborted');
-        p.destroy(PROGRESS_UI_DESTROY_DELAY);
-        return;
+        return false;
     };
 
     // 生成Epub文件
-    const pGenerate = p.add({
-        name: t($progress.$generate),
-        icon: MaterialSymbolsBook,
-        progress: {
-            complete: false,
-            finished: 0,
-            total: 1,
-        },
-    });
-    const blob = await epub.generate('blob');
-    p.progress(pGenerate);
-    p.complete(pGenerate);
+    const idEpub = uuid();
+    yield {
+        id: idEpub,
+        type: 'generate',
+        finished: 0,
+        total: 100,
+    };
+    const queue = new AsyncQueue<number>();
+    const blobPromise = epub
+        .generate('blob', meta => queue.push(meta.percent))
+        .then(blob => {
+            queue.close();
+            return blob;
+        });
+    for await (const percent of queue) yield {
+        id: idEpub,
+        type: 'generate',
+        finished: percent,
+        total: 100,
+    };
+    const blob = await blobPromise;
 
     // 检查下载终止信号
     if (signal?.aborted) {
         logger.simple('Info', 'download aborted');
-        p.destroy(PROGRESS_UI_DESTROY_DELAY);
-        return;
+        return false;
     };
 
     // 交付Epub文件
-    const pSave = p.add({
-        name: t($progress.$save),
-        icon: MaterialSymbolsBook,
-        progress: {
-            complete: false,
-            finished: 0,
-            total: 1,
-        },
-    });
-    await saveAs(blob, `${title}.epub`);
-    p.progress(pSave);
-    p.complete(pSave);
+    const idSave = uuid();
+    yield {
+        id: idSave,
+        type: 'save',
+        finished: 0,
+        total: 1,
+    };
+    await saveAs(blob, `${ escapeFilename(title) }.epub`);
+    yield {
+        id: idSave,
+        type: 'save',
+        finished: 1,
+        total: 1,
+    };
 
-    // 销毁进度UI
+    return true;
+}
+
+/**
+ * 下载系列小说为Epub
+ * @param id 系列ID
+ * @param signal 下载终止信号
+ * @returns 下载成功true，下载被取消false，出错时直接抛出错误
+ */
+export async function* downloadSeries(
+    id: string | number,
+    signal?: AbortSignal,
+): AsyncGenerator<AysncProgressYields<DownloadProgressType>, boolean, void> {
+    // 创建Epub
+    const epub = new jEpub();
+
+    // 获取系列数据
+    const data = yield* withProgressYields(
+        async complete => complete(await series(id, undefined, signal)),
+        1,
+        'series-api',
+    );
+    if (data === AbortSymbol || signal?.aborted) {
+        logger.simple('Info', 'download aborted');
+        return false;
+    }
+
+    // 初始化epub
+    epub.init({
+        i18n: tojEpubLang(data.body.language),
+        author: data.body.userName,
+        publisher: 'pixiv',
+        title: data.body.title,
+        description: data.body.caption,
+        tags: data.body.tags,
+        customMetadata: [{
+            name: 'dc:source',
+            value: data.body.extraData.meta.canonical,
+            renderInTitlePage(item) {
+                const htmlUrl = htmlEncode(item.value);
+                return `<div>${ t($downloader.$epub.$link, { link: htmlUrl }) }</div>`;
+            },
+        }],
+    });
+    epub.date(new Date(data.body.createDate));
+    epub.notes(t($downloader.$epub.$notes, {
+        link: htmlEncode(data.body.extraData.meta.canonical),
+        scriptUrl: htmlEncode(__GREASYFORK_URL__),
+        scriptName: htmlEncode(GM_info.script.name),
+        authorUrl: htmlEncode(__GREASYFORK_AUTHOR_URL__),
+        authorName: htmlEncode(GM_info.script.author),
+    }));
+
+    // 获取目录
+    const requestCount = Math.ceil(data.body.publishedContentCount / 30);
+    const index = yield* withProgressYields(
+        async (complete, progress) => {
+            const index: SeriesContentAPIPageItem[] = [];
+            const promises: Promise<typeof AbortSymbol | undefined>[] = [];
+            for (let i = 0; i < data.body.publishedContentCount; i += 30) {
+                const promise = (async () => {
+                    const d = await seriesContent(id, 30, i, undefined, signal);
+                    if (d === AbortSymbol || signal?.aborted) return AbortSymbol;
+                    for (let j = 0; j < d.body.page.seriesContents.length; j++)
+                        index[i+j] = d.body.page.seriesContents[j];
+                    progress()
+                }) ();
+                promises.push(promise);
+            }
+            const results = await Promise.all(promises);
+            return complete(
+                results.some(item => item === AbortSymbol) || signal?.aborted ?
+                    AbortSymbol : index
+            );
+        },
+        requestCount,
+        'series-index'
+    );
+    if (index === AbortSymbol || signal?.aborted) {
+        logger.simple('Info', 'download aborted');
+        return false;
+    }
+
+    // 同时进行 加载每一本小说 和 加载系列封面
+    yield* mergeAsyncGenerators<
+        AysncProgressYields<DownloadProgressType>, void | typeof AbortSymbol, void
+    >(
+        loadNovels(epub, index.map(n => n.id), 'series-novel', signal),
+        loadCover(epub, data.body.cover.urls.original, 'cover', signal),
+    );
+
+    // 生成Epub文件
+    const blob = yield* generateEpub(epub, 'generate');
+    if (blob === AbortSymbol || signal?.aborted) {
+        logger.simple('Info', 'download aborted');
+        return false;
+    }
+
+    // 交付Epub文件
+    yield* saveBlob(blob, data.body.title, 'save');
+
+    return true;
+}
+
+/**
+ * 带进度UI地下载
+ */
+export async function downloadWithUI<
+    Params extends any[]
+>(
+    downloadFunc: (...args: Params) => AsyncGenerator<AysncProgressYields<DownloadProgressType>, boolean, void>,
+    ...args: Params
+) {
+    /**
+     * 执行下载生成器函数得到的进度生成器对象
+     */
+    const progressGenerator = downloadFunc(...args);
+    /**
+     * 生成器函数返回的进度ID - ProgressUI的任务ID 对照表
+     */
+    const idTaskMap = new Map<string, number>();
+    /**
+     * 进度UI对象
+     */
+    const p = await progress([], {
+        dark: isPixivDark,
+        seamless: true,
+    });
+
+    // 迭代进度生成器对象，根据进度通知创建和更新进度UI
+    try {
+        for await (const { id, type, finished, total } of progressGenerator) {
+            const taskId = idTaskMap.has(id) ?
+                idTaskMap.get(id)! :
+                p.add(newTask(
+                    t(TypeNameMap[type]),
+                    TypeIconMap[type],
+                    total,
+                ));
+            p.progress(taskId, {
+                complete: total === finished,
+                error: false,
+                finished, total,
+            });
+            idTaskMap.set(id, taskId);
+        }
+    } catch (err) {
+        logger.simple('Error', 'download error');
+        logger.asLevel('Error', err);
+
+        alert(t($downloader.$error.$message), {
+            backdropDismiss: false,
+            dark: isPixivDark,
+            header: t($downloader.$error.$header),
+        });
+    }
+
+    // 下载函数执行完毕，销毁进度UI
     p.destroy(PROGRESS_UI_DESTROY_DELAY);
 }

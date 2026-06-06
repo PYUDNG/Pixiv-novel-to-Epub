@@ -169,7 +169,6 @@ function clear(): void {
  */
 function destroy(delay: number = 0) {
     const doDestroy = () => {
-        console.log('TRANSITION_DURATION', TRANSITION_DURATION);
         // 首先隐藏UI播放淡出动画
         desctroyed.value = true;
         // 待淡出动画完毕后移除DOM元素

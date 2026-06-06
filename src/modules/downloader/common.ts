@@ -1,47 +1,13 @@
-import { AbortSymbol, globalLogger, htmlEncode, Queue, requestBlob } from "@/utils";
+import { AbortSymbol, escapeFilename, globalLogger, htmlEncode, saveAs } from "@/utils";
 import { NovelAPIBody } from "../api/novel/types";
 import i18n, { i18nKeys } from "@/i18n";
 import jEpub from "jepub";
-import { insertIllusts } from "../api";
-
-// 网络常量配置
-const PIXIV_HOST = 'www.pixiv.net';
-const PIXIV_DEFAULT_REFERRER = 'https://www.pixiv.net';
-
-/** 包括初始尝试和所有重试在内，最大尝试次数 */
-const MAX_REQUEST_TRIES = 3;
+import { insertIllusts, novel } from "../api";
+import { AysncProgressYields, escJsStr, getPixivBlob, withProgressYields } from "./utils";
 
 const logger = globalLogger.withPath('downloader');
 const { t } = i18n.global;
 const $downloader = i18nKeys.$downloader;
-
-/**
- * 下载blob资源的队列
- */
-const queueBlob = new Queue({
-    max: 5,
-    sleep: 0,
-});
-
-/**
- * 异步任务选项
- */
-export interface AsyncOptions {
-    /**
-     * 异步任务终止信号
-     */
-    signal?: AbortSignal;
-
-    /**
-     * 任务产生进度回调
-     */
-    onProgress?: Function;
-
-    /**
-     * 任务完成回调
-     */
-    onComplete?: Function;
-}
 
 export type NovelImage = ({
     /** 小说封面图 */
@@ -63,7 +29,12 @@ export type NovelImage = ({
 }) & {
     /** 在Epub中的标记ID */
     epubImageId: string;
-}
+};
+
+export type jEpubAddParams = {
+    title: string;
+    content: string;
+};
 
 export interface ParsedNovelContent {
     /**
@@ -212,18 +183,18 @@ export function parseContent(
 
     // 在开头处添加tags
     if (tags) {
-        html = data.tags.tags.map(tag => {
+        const htmlAnchors = data.tags.tags.map(tag => {
             const htmlLabel = htmlEncode(tag.tag);
             const htmlUrl = htmlEncode(`https://www.pixiv.net/tags/${ encodeURI(tag.tag) }/novels?ur=1`);
-            return `<div><a href="${ htmlUrl }">${ htmlLabel }</a></div>\n`;
-        }).join() + html;
+            return `<a href="${ htmlUrl }">${ htmlLabel }</a>`;
+        });
+        html = `<div>${ htmlAnchors.join(' ') }</div>\n` + html;
     }
 
     // 在开头处添加link
     if (link) {
         const htmlUrl = htmlEncode(data.extraData.meta.canonical);
-        const htmlAnchor = `<a href="${ htmlUrl }">${ htmlUrl }</a>`
-        html = `<div>${ t($downloader.$epub.$link, { link: htmlAnchor }) }</div>\n` + html;
+        html = `<div>${ t($downloader.$epub.$link, { link: htmlUrl }) }</div>\n` + html;
     }
 
     // 在开头处添加描述
@@ -256,79 +227,186 @@ export function parseContent(
 }
 
 /**
- * 将图片资源加载到小说实例中
+ * 将图片资源加载到小说实例中  
+ * 生成器函数，每产生一次进度就yield一次进度对象
  * @param epub 小说实例
  * @param images 图片列表
+ * @param yields 进度类型
  * @param signal 请求终止信号
  */
-export async function loadImages(epub: jEpub, images: NovelImage[], { signal, onProgress, onComplete }: AsyncOptions = {}) {
-    await Promise.all(images.map(async image => {
-        switch (image.type) {
-            case 'cover':
-            case 'embedded': {
-                const blob = await getPixivBlob(image.url, signal);
-                if (blob === AbortSymbol) return;
-                epub.image(blob, image.epubImageId);
-                onProgress?.();
-                break;
-            }
-            case 'inserted': {
-                const data = await insertIllusts(image.novelId, image.id);
-                if (data === AbortSymbol) return;
-                const blob = await getPixivBlob(data.body[image.id].illust.images.original);
-                if (blob === AbortSymbol) return;
-                epub.image(blob, image.epubImageId);
-                onProgress?.();
-                break;
-            }
-        }
-    }));
-    onComplete?.();
+export async function* loadImages<
+    Y extends string
+>(
+    epub: jEpub,
+    images: NovelImage[],
+    yields: Y,
+    signal?: AbortSignal
+): AsyncGenerator<AysncProgressYields<Y>, void | typeof AbortSymbol, void> {
+    return yield* withProgressYields(
+        async (complete, progress) => {
+            let finished = 0;
+            const results = await Promise.all(images.map(async image => {
+                // 根据不同的图片类别进入不同加载逻辑
+                switch (image.type) {
+                    case 'cover':
+                    case 'embedded': {
+                        const blob = await getPixivBlob(image.url, signal);
+                        if (blob === AbortSymbol) return AbortSymbol;
+                        epub.image(blob, image.epubImageId);
+                        progress(++finished);
+                        break;
+                    }
+                    case 'inserted': {
+                        const data = await insertIllusts(image.novelId, image.id, undefined, signal);
+                        if (data === AbortSymbol) return AbortSymbol;
+                        const blob = await getPixivBlob(data.body[image.id].illust.images.original, signal);
+                        if (blob === AbortSymbol) return AbortSymbol;
+                        epub.image(blob, image.epubImageId);
+                        progress(++finished);
+                        break;
+                    }
+                }
+            }));
+
+            // 如果被取消就返回AbortSymbol，否则返回void
+            return complete<typeof AbortSymbol | undefined>(
+                results.some(result => result === AbortSymbol) || signal?.aborted ?
+                    AbortSymbol : undefined
+            );
+        },
+        images.length,
+        yields,
+    );
 }
 
 /**
  * 为Epub加载并添加封面
  * @param epub 小说实例
  * @param url 封面图url
+ * @param yields 进度类型
  * @param signal 请求终止信号
  */
-export async function loadCover(epub: jEpub, url: string, { signal, onProgress, onComplete }: AsyncOptions = {}): Promise<void> {
-    const blob = await getPixivBlob(url, signal);
-    if (blob === AbortSymbol) return;
-    epub.cover(blob);
-    onProgress?.();
-    onComplete?.();
+export async function* loadCover<
+    Y extends string
+>(
+    epub: jEpub,
+    url: string,
+    yields: Y,
+    signal?: AbortSignal
+): AsyncGenerator<AysncProgressYields<Y>, void | typeof AbortSymbol, void> {
+    return yield* withProgressYields(
+        async complete => {
+            const blob = await getPixivBlob(url, signal);
+            if (blob === AbortSymbol || signal?.aborted) return AbortSymbol;
+            epub.cover(blob);
+            complete();
+        },
+        1,
+        yields,
+    );
 }
 
 /**
- * 从pixiv服务器加载blob资源
- * @param url 请求网址
- * @param signal 请求终止信号
+ * 将给定的小说列表按顺序加载到epub中，所有小说作为章节追加到epub末尾并加载好外部资源
+ * @param epub jEpub实例
+ * @param ids 小说id列表
+ * @param yields 进度类型
+ * @param signal 终止信号
  */
-async function getPixivBlob(url: string, signal?: AbortSignal): Promise<Blob | typeof AbortSymbol > {
-    // 带错误重试的网络请求：默认重试，不需要重试时使用break跳出
-    for (let n = 1; n <= MAX_REQUEST_TRIES; n++) {
-        try {
-            return await queueBlob.enqueue(
-                () => requestBlob({
-                    method: 'GET', url,
-                    headers: {
-                        referrer: location.host === PIXIV_HOST ? location.href : PIXIV_DEFAULT_REFERRER,
-                        host: PIXIV_HOST,
-                    },
-                }, signal),
-                signal,
-            );
-        } catch(err) {
-            // 主动取消时跳出重试逻辑
-            if (err === AbortSymbol) return AbortSymbol;
-        }
-    }
+export async function* loadNovels<
+    Y extends string
+>(
+    epub: jEpub,
+    ids: string[],
+    yields: Y,
+    signal?: AbortSignal,
+): AsyncGenerator<AysncProgressYields<Y>, void | typeof AbortSymbol, void> {
+    return yield* withProgressYields(
+        async (complete, progress) => {
+            // 先加载所有小说的数据
+            let finished = 0;
+            const params = await Promise.all(ids.map(async id => {
+                // 获取小说数据
+                const dNovel = await novel(id, signal);
+                if (dNovel === AbortSymbol || signal?.aborted) return AbortSymbol;
 
-    // 尝试次数用尽也没有成功，抛出错误
-    throw new Error(`error fetching blob: ${ url }`);
+                // 解析内容
+                const { html, images, title } = parseContent(dNovel.body, {
+                    cover: true,
+                    desc: true,
+                    link: true,
+                    tags: true,
+                });
+
+                // 加载所有封面和插图
+                for await (const _ of loadImages(epub, images, 'images', signal)) {}
+                
+                // 通知已经完成本小说加载
+                progress(++finished);
+
+                // 返回epub数据
+                return { title, content: html };
+            }));
+
+            // 再按顺序将所有加载好的小说追加到epub中
+            try {
+                // 如果被取消就不追加了
+                if (params.some(p => p === AbortSymbol) || signal?.aborted) 
+                    return AbortSymbol;
+                // 没有取消就全部追加到epub
+                else
+                    (params as jEpubAddParams[]).forEach(({ title, content }) => epub.add(title, content));
+            } finally {
+                // 无论如何都要确保进度最终完成
+                complete();
+            }
+        },
+        ids.length,
+        yields,
+    );
 }
 
-function escJsStr(str: string) {
-    return JSON.stringify(str);
+/**
+ * 将epub生成为blob对象  
+ * 由于技术原因，此方法不支持使用AbortSignal终止
+ * @param epub jEpub实例
+ * @param yields 进度类型
+ * @returns blob对象
+ */
+export async function* generateEpub<
+    Y extends string
+>(
+    epub: jEpub,
+    yields: Y,
+): AsyncGenerator<AysncProgressYields<Y>, Blob | typeof AbortSymbol, void> {
+    return yield* withProgressYields(
+        async (complete, progress) => {
+            const blob = await epub.generate('blob', meta => progress(meta.percent));
+            complete();
+            return blob;
+        },
+        100,
+        yields,
+    );
+}
+
+/**
+ * 将Blob保存到用户的机器  
+ * 由于技术限制，此操作无法终止
+ * @param blob blob对象
+ * @param filename 文件名
+ * @param yields 进度类型
+ */
+export async function* saveBlob<
+    Y extends string
+>(
+    blob: Blob,
+    filename: string,
+    yields: Y,
+): AsyncGenerator<AysncProgressYields<Y>, void, void> {
+    yield* withProgressYields(
+        async complete => complete(await saveAs(blob, `${ escapeFilename(filename) }.epub`)),
+        1,
+        yields,
+    )
 }

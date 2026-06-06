@@ -34,6 +34,9 @@ export default defineConfig({
                     'https://www.pixiv.net/*',
                     'https://pixiv.net/*',
                 ],
+                require: [
+                    'data:application/javascript,window.setImmediate=window.setImmediate||((f,...args)=>window.setTimeout(()=>f(...args),0))',
+                ],
                 version: pkg.version,
                 author: pkg.author.name,
                 "run-at": 'document-start',
@@ -71,5 +74,13 @@ export default defineConfig({
         alias: {
             '@': path.resolve(__dirname, './src'),
         },
+    },
+    define: {
+        __GREASYFORK_URL__: JSON.stringify('https://greasyfork.org/scripts/483999'),
+        __GREASYFORK_AUTHOR_URL__: JSON.stringify('https://greasyfork.org/users/667968'),
+    },
+    optimizeDeps: {
+        exclude: ['jepub'],
+        include: ['jszip']
     },
 });

@@ -1,6 +1,6 @@
-import { SingleOrArray } from "@/utils";
+import type { SingleOrArray } from "@/utils";
 import { api } from "../request";
-import type { PixivInsertIllustsAPIResponse, PixivNovelAPIResponse } from "./types";
+import type { PixivInsertIllustsAPIResponse, PixivNovelAPIResponse, PixivSeriesAPIResponse, PixivSeriesContentAPIResponse } from "./types";
 
 /**
  * 单本小说
@@ -46,14 +46,14 @@ export const insertIllusts = (
  * @see https://www.pixiv.net/ajax/novel/series/9649276?lang=zh&version=a48f2f681629909b885608393916b81989accf5b
  */
 export const series = (id: number | string, lang = 'zh', signal?: AbortSignal) =>
-    api(`/ajax/novel/series/${id}`, { lang }, signal);
+    api<PixivSeriesAPIResponse>(`/ajax/novel/series/${id}`, { lang }, signal);
 
 /**
  * 系列小说目录
  * @param id 系列ID
  * @param limit 每页多少篇，建议不要改
- * @param last_order 从第几篇开始（0-based，included）
- * @param order_by 未知，建议不要改
+ * @param lastOrder 从第几篇开始（0-based，included）
+ * @param orderBy 未知，建议不要改
  * @param signal 请求终止信号
  * @see https://www.pixiv.net/ajax/novel/series_content/9649276?limit=30&last_order=0&order_by=asc
  */
@@ -63,7 +63,7 @@ export const seriesContent = (
     lastOrder: string | number = 0,
     orderBy: string = 'asc',
     signal?: AbortSignal,
-) => api(`/ajax/novel/series_content/${id}`, {
+) => api<PixivSeriesContentAPIResponse>(`/ajax/novel/series_content/${id}`, {
     limit: limit.toString(),
     last_order: lastOrder.toString(),
     order_by: orderBy

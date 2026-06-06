@@ -1,27 +1,22 @@
 import i18n, { i18nKeys } from "@/i18n";
 import { defineModule } from "../types";
-import { $CrE, createShadowApp, detectDom, getUrlArgv, globalLogger, isPixivDark, Nullable } from "@/utils";
+import { $CrE, createShadowApp, detectDom, isPixivDark, Nullable } from "@/utils";
 import DownloadButton from "@/components/download-button.vue";
-import { downloadNovel, downloadWithUI } from "../downloader";
+import { downloadSeries, downloadWithUI } from "../downloader";
 import { GM_registerMenuCommand, GM_unregisterMenuCommand } from "$";
 
 const { t } = i18n.global;
-const $novel = i18nKeys.$novel;
-const logger = globalLogger.withPath('novel');
+const $series = i18nKeys.$series;
 
 export default defineModule({
-    id: 'novel',
+    id: 'series',
     checkers: {
-        type: 'path',
-        value: '/novel/show.php'
+        type: 'regpath',
+        value: /\/novel\/series\/\d+/
     },
     async enter() {
         // 获取小说信息
-        const id = getUrlArgv('id');
-        if (!id) {
-            logger.simple('Error', 'url search param "id" not found');
-            return;
-        }
+        const id = location.pathname.match(/\/novel\/series\/(\d+)/)![1];
 
         // 创建下载按钮
         const toolbar = await detectDom('main > section section');
@@ -34,13 +29,13 @@ export default defineModule({
                 }
             },
             props: {
-                label: t($novel.$download),
-                callback: () => downloadWithUI(downloadNovel, id),
+                label: t($series.$download),
+                callback: () => downloadWithUI(downloadSeries, id),
             },
         });
 
         // 创建脚本菜单
-        this.context!.downloadMenuId = GM_registerMenuCommand(t($novel.$download), () => downloadWithUI(downloadNovel, id));
+        this.context!.downloadMenuId = GM_registerMenuCommand(t($series.$download), () => downloadWithUI(downloadSeries, id));
     },
     leave() {
         this.context!.downloadMenuId !== null &&

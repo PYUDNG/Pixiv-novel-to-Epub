@@ -100,6 +100,13 @@ async function _api<
     return result;
 }
 
+/**
+ * 清空API缓存，确保后续从服务器获取最新数据
+ */
+export function clearCache() {
+    cache.clear();
+}
+
 function toAbsURL(pathname: string, params: Record<string, string>) {
     return new URL(pathname, PIXIV_API_BASEURL).href + (params ? `?${toSearch(params)}` : '');
 }

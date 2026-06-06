@@ -16,6 +16,12 @@ export interface Progress {
      * 注意这个属性是独立于`total`/`finished`的，并非一定要是由这两个属性计算出来，可以和它们不一致
      */
     complete: boolean;
+
+    /**
+     * 任务是否出错终止  
+     * 此属性和complete不能同时为true
+     */
+    error: boolean;
 }
 
 /**

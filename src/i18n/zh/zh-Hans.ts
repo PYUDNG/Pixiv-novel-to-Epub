@@ -1,20 +1,42 @@
+import dedent from 'dedent';
+
 export default {
+    api: {
+        'clear-cache': '清空缓存',
+        'cache-cleared': {
+            header: '缓存清理',
+            content: '已清空缓存，后续下载将从服务器获取最新数据',
+        },
+    },
     novel: {
+        download: '下载Epub',
+    },
+    series: {
         download: '下载Epub',
     },
     downloader: {
         epub: {
-            link: '小说链接：{link}',
+            link: '小说链接：<a href="{link}">{link}</a>',
+            notes: dedent`
+                <p>EPUB 生成自: <a href="{link}">{link}</a></p>
+                <p>由 <a href="{scriptUrl}">{scriptName}</a> 生成，作者 <a href="{authorUrl}">{authorName}</a></p><br>
+                <p>版权归文章作者所有。阅读和分发此文件时，请遵守相关法律法规。</p>
+            `,
         },
-        novel: {
-            progress: {
-                api: '小说数据',
-                cover: '封面图',
-                images: '插图',
-                generate: '合成Epub文件',
-                save: '保存Epub文件',
-            },
-        }
+        progress: {
+            'novel-api': '加载小说数据',
+            'series-api': '加载系列数据',
+            'series-index': '加载系列目录',
+            'series-novel': '加载系列小说',
+            cover: '加载封面图',
+            images: '加载插图',
+            generate: '合成Epub文件',
+            save: '保存Epub文件',
+        },
+        error: {
+            message: '下载出现错误，请重试或向开发者反馈',
+            header: '下载错误',
+        },
     },
     popup: {
         dialog: {
