@@ -24,30 +24,24 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: 22
         cache: 'npm'
 
-    # jEpub采用非npm版本，需要手动构建产物
-    - name: Build Submodule Dependency
+    # 1. 确保子模块最新并就地编译
+    - name: Build Submodule
       run: |
-        # 1. 安全保障：防止 actions/checkout 偶尔没初始化成功，手动强行同步并更新
         git submodule sync
         git submodule update --init --recursive --force
-        
-        # 2. 打印当前目录下的所有文件，方便如果再出错时，你在 Log 里一眼能看清文件夹到底叫什么
-        echo "=== 当前根目录结构 ==="
-        ls -R
-        
-        # 3. 进入子模块并编译（请确保此路径与你本地 .gitmodules 中的 path 一致）
         cd deps/jEpub
         npm ci
         npm run build
-    
-    # 继续安装常规依赖
-    - name: Install dependencies
-      run: npm ci       # 此时子模块已有 dist，主项目可以完美链接并识别
-    
-    - name: Build project
+
+    # 2. 安装主项目依赖
+    - name: Install Main Dependencies
+      run: npm ci
+
+    # 3. 执行主项目打包
+    - name: Build Main Project
       run: npm run build
     
     - name: Get version from package.json
