@@ -81,11 +81,18 @@ npm run dev
 npm run build
 ```
 
-5. **后处理（美化+压缩）**
+5. **如无需代码压缩和美化，可以使用以下命令构建**
 ```bash
-npm run build:dist
+npm run build:deps && npm run build:raw
 ```
 
+6. **自动化AI翻译README**
+- 创建`scripts/readme-builder/openai.config.ts`（可参考同目录的`openai.config.d.ts`和`openai.congig.ts.template`），填写自己的AI API配置
+- 修改`README.src.md`，使用你熟悉的语言编写README，并支持使用 `<!-- condition:xxx -->` 语法进行条件渲染，具体格式可以参照项目内已有的`README.src.md`
+- 运行以下代码自动化翻译和渲染所有语言和平台的README
+```bash
+npm run build:readme
+```
 #### 安装用户脚本
 
 构建完成后，会在项目 `/dist/` 目录生成 `.user.js` 文件，可以通过以下步骤安装：
