@@ -27,17 +27,15 @@ jobs:
         node-version: 22
         cache: 'npm'
 
-    # 1. 确保子模块最新并就地编译
-    - name: Build Submodule
+    # 1. 编译子模块
+    - name: Build Submodule (jEpub)
+      working-directory: deps/jEpub
       run: |
-        git submodule sync
-        git submodule update --init --recursive --force
-        cd deps/jEpub
         npm ci
         npm run build
 
     # 2. 安装主项目依赖
-    - name: Install Main Dependencies
+    - name: Install Main Project Dependencies
       run: npm ci
 
     # 3. 执行主项目打包
