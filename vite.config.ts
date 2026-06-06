@@ -28,7 +28,7 @@ export default defineConfig({
                     '': 'Download pixiv novels as Epub files',
                     'zh-CN': '下载Pixiv小说为Epub电子书文件',
                 },
-                icon: 'https://vitejs.dev/logo.svg',
+                icon: 'https://www.pixiv.net/favicon.ico',
                 namespace: 'https://greasyfork.org/users/667968-pyudng',
                 match: [
                     'https://www.pixiv.net/*',
@@ -39,6 +39,7 @@ export default defineConfig({
                 ],
                 version: pkg.version,
                 author: pkg.author.name,
+                license: 'GPL-3.0-or-later',
                 "run-at": 'document-start',
             },
             build: {
