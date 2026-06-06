@@ -8,8 +8,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "build": "npm run build:raw && node scripts/post-compress.js",
     "check": "npx vue-tsc --noEmit --project tsconfig.app.json",
+    "build:raw": "vue-tsc -b && vite build",
+    "build:readme": "npx tsx scripts/readme-builder/main.ts",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -24,12 +26,17 @@
   },
   "devDependencies": {
     "@iconify-json/material-symbols": "^1.2.75",
-    "@types/node": "^25.9.1",
+    "@types/node": "^25.9.2",
     "@types/postcss-url": "^10.0.4",
     "@vitejs/plugin-vue": "^6.0.6",
+    "axios": "^1.17.0",
     "cssnano": "^8.0.1",
+    "esbuild": "^0.28.0",
+    "fs-extra": "^11.3.5",
     "postcss-rem-to-responsive-pixel": "^7.0.4",
     "postcss-url": "^10.1.4",
+    "prettier": "^3.8.3",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "unplugin-icons": "^23.0.1",
     "vite": "^8.0.11",
