@@ -30,9 +30,18 @@ jobs:
     # jEpub采用非npm版本，需要手动构建产物
     - name: Build Submodule Dependency
       run: |
+        # 1. 安全保障：防止 actions/checkout 偶尔没初始化成功，手动强行同步并更新
+        git submodule sync
+        git submodule update --init --recursive --force
+        
+        # 2. 打印当前目录下的所有文件，方便如果再出错时，你在 Log 里一眼能看清文件夹到底叫什么
+        echo "=== 当前根目录结构 ==="
+        ls -R
+        
+        # 3. 进入子模块并编译（请确保此路径与你本地 .gitmodules 中的 path 一致）
         cd deps/jEpub
-        npm ci          # 安装子模块自身所需的开发依赖（如 vite, typescript 等）
-        npm run build   # 编译出 dist 产物
+        npm ci
+        npm run build
     
     # 继续安装常规依赖
     - name: Install dependencies
