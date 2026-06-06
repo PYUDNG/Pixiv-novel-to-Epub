@@ -1,0 +1,3 @@
+[submodule "deps/jEpub"]
+	path = deps/jEpub
+	url = https://github.com/lelinhtinh/jEpub.git

@@ -17,7 +17,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
     "dedent": "^1.7.2",
-    "jepub": "^2.5.0",
+    "jepub": "file:./deps/jEpub",
     "jszip": "^3.10.1",
     "mitt": "^3.0.1",
     "tailwindcss": "^4.3.0",
