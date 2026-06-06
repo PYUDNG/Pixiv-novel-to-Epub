@@ -34,6 +34,9 @@ export default defineConfig({
                     'https://www.pixiv.net/*',
                     'https://pixiv.net/*',
                 ],
+                connect: [
+                    'i.pximg.net',
+                ],
                 require: [
                     'data:application/javascript,window.setImmediate=window.setImmediate||((f,...args)=>window.setTimeout(()=>f(...args),0))',
                 ],

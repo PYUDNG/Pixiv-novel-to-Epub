@@ -18,20 +18,22 @@ export default defineModule({
         // 获取小说信息
         const id = location.pathname.match(/\/novel\/series\/(\d+)/)![1];
 
-        // 创建下载按钮
-        const toolbar = await detectDom('main > section section');
-        const host = toolbar.appendChild($CrE('div'));
-        createShadowApp(DownloadButton, {
-            host: host,
-            options: {
-                app: {
-                    classes: isPixivDark.value ? ['dark'] : [],
-                }
-            },
-            props: {
-                label: t($series.$download),
-                callback: () => downloadWithUI(downloadSeries, id),
-            },
+        // 当页面结构加载完毕时，创建下载按钮
+        detectDom('main > section > div:first-child > div:last-child:nth-of-type(3)').then(async () => {
+            const toolbar = await detectDom('main > section section');
+            const host = toolbar.appendChild($CrE('div'));
+            createShadowApp(DownloadButton, {
+                host: host,
+                options: {
+                    app: {
+                        classes: isPixivDark.value ? ['dark'] : [],
+                    }
+                },
+                props: {
+                    label: t($series.$download),
+                    callback: () => downloadWithUI(downloadSeries, id),
+                },
+            });
         });
 
         // 创建脚本菜单

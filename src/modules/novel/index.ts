@@ -24,19 +24,21 @@ export default defineModule({
         }
 
         // 创建下载按钮
-        const toolbar = await detectDom('main > section section');
-        const host = toolbar.appendChild($CrE('div'));
-        createShadowApp(DownloadButton, {
-            host: host,
-            options: {
-                app: {
-                    classes: isPixivDark.value ? ['dark'] : [],
-                }
-            },
-            props: {
-                label: t($novel.$download),
-                callback: () => downloadWithUI(downloadNovel, id),
-            },
+        detectDom('main > section > div:first-child > div:last-child:first-child > div:last-child:nth-of-type(2)').then(async () => {
+            const toolbar = await detectDom('main > section section');
+            const host = toolbar.appendChild($CrE('div'));
+            createShadowApp(DownloadButton, {
+                host: host,
+                options: {
+                    app: {
+                        classes: isPixivDark.value ? ['dark'] : [],
+                    }
+                },
+                props: {
+                    label: t($novel.$download),
+                    callback: () => downloadWithUI(downloadNovel, id),
+                },
+            });
         });
 
         // 创建脚本菜单

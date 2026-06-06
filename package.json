@@ -8,8 +8,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:raw && node scripts/post-compress.js",
+    "build": "npm run build:deps && npm run build:raw && node scripts/post-compress.js",
     "check": "npx vue-tsc --noEmit --project tsconfig.app.json",
+    "build:deps": "cd deps/jEpub && npm install && npm run build",
     "build:raw": "vue-tsc -b && vite build",
     "build:readme": "npx tsx scripts/readme-builder/main.ts",
     "preview": "vite preview"
