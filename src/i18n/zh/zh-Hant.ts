@@ -14,6 +14,22 @@ export default {
     series: {
         download: '下載Epub',
     },
+    custom: {
+        download: '合併下載多篇小說',
+        input: {
+            header: '合併下載多篇小說',
+            content: '請輸入需要下載的小說的連結或ID，每行一個，或者在一行中使用空格或逗號分隔：',
+        },
+        invalidInput: {
+            header: '輸入格式錯誤',
+            content: '請檢查輸入格式是否正確\n每行一個小說的連結或ID，或者在一行中使用空格或逗號分隔多個連結或ID',
+        },
+        fetchingData: '正在獲取小說資料',
+        filename: {
+            header: '合併下載多篇小說',
+            content: '請輸入儲存Epub的檔案名稱：',
+        },
+    },
     downloader: {
         epub: {
             link: '小說連結：<a href="{link}">{link}</a>',

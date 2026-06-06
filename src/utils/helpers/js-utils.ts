@@ -971,7 +971,7 @@ export function toPurePlainObject<T>(value: T): DeepUnwrap<T> {
  * 获取当前URL参数值
  * @param name URL参数键名
  */
-export function getUrlArgv(name: string) {
-    const params = new URLSearchParams(location.search);
+export function getUrlArgv(name: string, url?: string) {
+    const params = url ? new URL(url).searchParams : new URLSearchParams(location.search);
     return params.get(name);
 }

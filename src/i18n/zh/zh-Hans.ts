@@ -14,6 +14,22 @@ export default {
     series: {
         download: '下载Epub',
     },
+    custom: {
+        download: '合并下载多篇小说',
+        input: {
+            header: '合并下载多篇小说',
+            content: '请输入需要下载的小说的链接或者ID，每行一个，或者在一行中使用空格或逗号分隔：',
+        },
+        invalidInput: {
+            header: '输入格式错误',
+            content: '请检查输入格式是否正确\n每行一个小说的链接或者ID，或者在一行中使用空格或逗号分隔多个链接或者ID',
+        },
+        fetchingData: '正在获取小说数据',
+        filename: {
+            header: '合并下载多篇小说',
+            content: '请输入保存Epub的文件名：',
+        },
+    },
     downloader: {
         epub: {
             link: '小说链接：<a href="{link}">{link}</a>',

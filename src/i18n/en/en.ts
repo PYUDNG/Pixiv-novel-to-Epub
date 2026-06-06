@@ -14,6 +14,22 @@ export default {
     series: {
         download: 'Download Epub',
     },
+    custom: {
+        download: 'Batch Download Novels',
+        input: {
+            header: 'Batch Download Novels',
+            content: 'Please enter the links or IDs of the novels to download, one per line, or separate multiple links/IDs with spaces or commas in a single line:',
+        },
+        invalidInput: {
+            header: 'Invalid Input Format',
+            content: 'Please check the input format.\nEnter one novel link or ID per line, or separate multiple links/IDs with spaces or commas in a single line.',
+        },
+        fetchingData: 'Fetching novel data',
+        filename: {
+            header: 'Batch Download Novels',
+            content: 'Please enter the filename for the saved Epub:',
+        },
+    },
     downloader: {
         epub: {
             link: 'Novel link: <a href="{link}">{link}</a>',

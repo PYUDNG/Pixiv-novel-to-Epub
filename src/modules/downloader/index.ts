@@ -305,6 +305,79 @@ export async function* downloadSeries(
 }
 
 /**
+ * 合并下载多篇小说为Epub
+ * @param ids 小说ID列表
+ * @param filename 下载文件名，不包括`.epub`扩展名部分；省略时默认使用第一本小说的标题
+ * @param signal 下载终止信号
+ * @returns 下载成功true，下载被取消false，出错时直接抛出错误
+ */
+export async function* downloadCustom(
+    ids: (string | number)[],
+    filename?: string,
+    signal?: AbortSignal,
+): AsyncGenerator<AysncProgressYields<DownloadProgressType>, boolean, void> {
+    // 创建Epub
+    const epub = new jEpub();
+
+    // 获取第一本书数据
+    const data = yield* withProgressYields(
+        async complete => complete(novel(ids[0])),
+        1,
+        'novel-api',
+    );
+    if (data === AbortSymbol || signal?.aborted) {
+        logger.simple('Info', 'download aborted');
+        return false;
+    }
+
+    // 初始化Epub
+    epub.init({
+        title: data.body.title,
+        description: data.body.description,
+        author: data.body.userName,
+        publisher: 'pixiv',
+        i18n: tojEpubLang(data.body.language),
+        tags: data.body.tags.tags.map(tag => tag.tag),
+        customMetadata: [{
+            name: 'dc:source',
+            value: data.body.extraData.meta.canonical,
+            renderInTitlePage(item) {
+                const htmlUrl = htmlEncode(item.value);
+                return `<div>${ t($downloader.$epub.$link, { link: htmlUrl }) }</div>`;
+            },
+        }],
+    });
+    epub.date(new Date(data.body.createDate));
+    epub.notes(t($downloader.$epub.$notes, {
+        link: htmlEncode(data.body.extraData.meta.canonical),
+        scriptUrl: htmlEncode(__GREASYFORK_URL__),
+        scriptName: htmlEncode(GM_info.script.name),
+        authorUrl: htmlEncode(__GREASYFORK_AUTHOR_URL__),
+        authorName: htmlEncode(GM_info.script.author),
+    }));
+
+    // 同时进行 加载每一本小说 和 加载系列封面
+    yield* mergeAsyncGenerators<
+        AysncProgressYields<DownloadProgressType>, void | typeof AbortSymbol, void
+    >(
+        loadNovels(epub, ids, 'series-novel', signal),
+        loadCover(epub, data.body.coverUrl, 'cover', signal),
+    );
+
+    // 生成Epub文件
+    const blob = yield* generateEpub(epub, 'generate');
+    if (blob === AbortSymbol || signal?.aborted) {
+        logger.simple('Info', 'download aborted');
+        return false;
+    }
+
+    // 交付Epub文件
+    yield* saveBlob(blob, filename ?? data.body.title, 'save');
+
+    return true;
+}
+
+/**
  * 带进度UI地下载
  */
 export async function downloadWithUI<

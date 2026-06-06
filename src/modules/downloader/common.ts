@@ -317,7 +317,7 @@ export async function* loadNovels<
     Y extends string
 >(
     epub: jEpub,
-    ids: string[],
+    ids: (string | number)[],
     yields: Y,
     signal?: AbortSignal,
 ): AsyncGenerator<AysncProgressYields<Y>, void | typeof AbortSymbol, void> {
