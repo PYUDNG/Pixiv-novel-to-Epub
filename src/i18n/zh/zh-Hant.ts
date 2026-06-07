@@ -34,9 +34,9 @@ export default {
         epub: {
             link: '小說連結：<a href="{link}">{link}</a>',
             notes: dedent`
-                <p>從以下來源產生 EPUB：<a href="{link}">{link}</a></p>
-                <p>由 <a href="{scriptUrl}">{scriptName}</a> 產生，作者：<a href="{authorUrl}">{authorName}</a></p><br>
-                <p>版權歸文章作者所有。閱讀與散布本檔案時，請遵守相關法律規定。</p>
+                <div>從以下來源產生 EPUB：<a href="{link}">{link}</a></div>
+                <div>由 <a href="{scriptUrl}">{scriptName}</a> 產生，作者：<a href="{authorUrl}">{authorName}</a></div><br>
+                <div>版權歸文章作者所有。閱讀與散布本檔案時，請遵守相關法律規定。</div>
             `,
         },
         progress: {

@@ -12,7 +12,7 @@ import MaterialSymbolsImageOutline from '~icons/material-symbols/image-outline'
 import MaterialSymbolsBook from '~icons/material-symbols/book';
 import MaterialSymbolsFileSaveOutline from '~icons/material-symbols/file-save-outline';
 import type { Component } from "vue";
-import { AysncProgressYields, tojEpubLang, withProgressYields } from "./utils";
+import { AysncProgressYields, toEpubHTML, tojEpubLang, withProgressYields } from "./utils";
 import { GM_info } from "$";
 import { SeriesContentAPIPageItem } from "../api/novel/types";
 
@@ -107,7 +107,7 @@ export async function* downloadNovel(
         author: data.body.userName,
         publisher: 'pixiv',
         title: data.body.title,
-        description: data.body.description,
+        description: toEpubHTML(data.body.description, true),
         tags: data.body.tags.tags.map(tag => tag.tag),
         customMetadata: [{
             name: 'dc:source',
@@ -233,7 +233,7 @@ export async function* downloadSeries(
         author: data.body.userName,
         publisher: 'pixiv',
         title: data.body.title,
-        description: data.body.caption,
+        description: toEpubHTML(data.body.caption, true),
         tags: data.body.tags,
         customMetadata: [{
             name: 'dc:source',
@@ -333,7 +333,7 @@ export async function* downloadCustom(
     // 初始化Epub
     epub.init({
         title: data.body.title,
-        description: data.body.description,
+        description: toEpubHTML(data.body.description, true),
         author: data.body.userName,
         publisher: 'pixiv',
         i18n: tojEpubLang(data.body.language),

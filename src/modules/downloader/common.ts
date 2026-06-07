@@ -3,7 +3,7 @@ import { NovelAPIBody } from "../api/novel/types";
 import i18n, { i18nKeys } from "@/i18n";
 import jEpub from "jepub";
 import { insertIllusts, novel } from "../api";
-import { AysncProgressYields, escJsStr, getPixivBlob, withProgressYields } from "./utils";
+import { AysncProgressYields, escJsStr, getPixivBlob, toEpubHTML, withProgressYields } from "./utils";
 
 const logger = globalLogger.withPath('downloader');
 const { t } = i18n.global;
@@ -156,16 +156,13 @@ export function parseContent(
         logger.asLevel('Warning', markers);
     }
 
-    // 最长允许连续4个换行符（视觉上是3个空行）
-    html = html.replaceAll(/\n{4,}/g, '\n'.repeat(4));
-
     // 解析换行和 '[newpage]'
     // 每一行用一个<p>包裹
     // 每一页用一个<div class="ChapterBlockMarker">包裹
     const pageCounter = (start => () => start++) (1);
     html = html.split('[newpage]').map(subContent => {
         // Split html into pages and wrap each page's lines into <p>s
-        return subContent.split('\n').map(line => line.trim() ? `<p>${line}</p>` : '<br>').join('\n');
+        return toEpubHTML(subContent);
     }).map(pageHTML => {
         const page = pageCounter();
         const page_id = `ChapterPage-${page}`;
@@ -200,11 +197,7 @@ export function parseContent(
     // 在开头处添加描述
     if (desc) {
         let description = data.description;
-        description = description
-            .replace(/(<br \/>)+/g, '<br>').split('<br>')
-            .filter(line => line.trim().length)
-            .map(line => `<p>${line}</p>`)
-            .join('\n');
+        description = toEpubHTML(description, true);
         description = `<div id="ChapterDescription" class="ChapterContentBlock">${ description }</div>\n`;
         html = description + html;
     }
