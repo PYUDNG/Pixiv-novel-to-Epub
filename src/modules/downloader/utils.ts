@@ -70,6 +70,8 @@ export async function* withProgressYields<
     const doClose: CompleteCallback = (val?: any) => { queue.push(total); queue.close(); return val; };
     const doYield: ProgressCallback = finished => queue.push(finished ? lastFinished = finished : ++lastFinished);
     const pResult = func(doClose, doYield);
+    // 当任务失败时通知销毁队列
+    pResult.catch(err => queue.destroy(err));
     // 初始化零进度报告
     yield {
         id: yieldId,
@@ -179,7 +181,7 @@ export function toEpubHTML(content: string, isHTML: boolean = false): string {
                     // 注释：忽略
                     case '#comment': break;
                     // 文字 / CDATA：使用内容
-                    case '$text':
+                    case '#text':
                     case '#cdata-section': {
                         parseText(node.nodeValue ?? '');
                         break;

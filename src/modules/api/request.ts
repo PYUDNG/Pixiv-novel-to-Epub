@@ -33,7 +33,9 @@ export const api = async <
             return await queue.enqueue(() => _api<T>(...args));
         } catch(err) {
             // 当主动Abort时不重试，返回 API Aborted 标志
+            const lastArg = args[args.length - 1];
             if (err === AbortSymbol) return AbortSymbol;
+            if (lastArg instanceof AbortSignal && lastArg.aborted) return AbortSymbol;
 
             // 错误重试，直到尝试次数用尽
             logger.simple('Error', `api request error (try #${n})`);
@@ -80,7 +82,7 @@ async function _api<
     if (cache.has(url)) return cache.get(url);
 
     // 执行请求
-    let result: T;
+    let result: T, error: any = null;
     try {
         result = await requestJson({
             method: 'GET', url,
@@ -88,7 +90,25 @@ async function _api<
                 referrer: location.host === PIXIV_HOST ? location.href : PIXIV_DEFAULT_REFERRER,
                 host: PIXIV_HOST,
             },
+            onload(response) {
+                if (response.status >= 400)
+                    error = response;
+                // 模拟出错情形
+                else
+                    error = 'Mock Error';
+            }
         }, signal);
+
+        // 检查pixiv api 错误标志键
+        if (hasErrorProp(result) && result.error)
+            throw Error(`api returned error: ${ result.message }`);
+
+        // 检查是否有请求错误
+        if (error)
+            throw Error(`api status code error: ${ error }`);
+
+        // 存缓存
+        cache.set(url, result);
     } catch(err) {
         logger.simple('Error', 'api request error');
         logger.asLevel('Error', err);
@@ -98,6 +118,15 @@ async function _api<
     }
 
     return result;
+
+    function hasErrorProp(val: T): val is T & object & { error: boolean, message: string } {
+        return typeof val === 'object'
+            && val !== null
+            && Object.hasOwn(val, 'error')
+            && Object.hasOwn(val, 'message')
+            && typeof Reflect.get(val, 'error') === 'boolean'
+            && typeof Reflect.get(val, 'message') === 'string';
+    }
 }
 
 /**

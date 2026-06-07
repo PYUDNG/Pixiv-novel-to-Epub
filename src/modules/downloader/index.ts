@@ -379,6 +379,8 @@ export async function* downloadCustom(
 
 /**
  * 带进度UI地下载
+ * @param downloadFunc 下载逻辑函数，要求函数签名的最后一个参数必须是负责终止/取消整个下载流程的{@link AbortSignal}（可以为必选参数，也可以为可选参数）
+ * @param args 对下载逻辑函数传入的参数
  */
 export async function downloadWithUI<
     Params extends any[]
@@ -386,6 +388,21 @@ export async function downloadWithUI<
     downloadFunc: (...args: Params) => AsyncGenerator<AysncProgressYields<DownloadProgressType>, boolean, void>,
     ...args: Params
 ) {
+    /** 内部的中断信号，用于同时处理外部传入信号中断与内部错误捕获自动中断 */
+    const internalAbortController = new AbortController();
+    // 修改args以应用内部中断信号
+    if (args[args.length-1] instanceof AbortSignal) {
+        // 原传入实参中传了AbortSignal
+        // 注意这里有个未处理的Edge Case: 如果函数签名中最后有大于一个连续的参数都是AbortSignal，而传参时省略了最后一个我们需要的Signal，
+        // 这里判断不出来，会依然以为传了该信号；实践中，不要把函数签名最后设计大于一个连续的AbortSignal，有一个用于中断整个下载流程的就够了
+        const externalSignal = args[args.length-1] as AbortSignal;
+        args[args.length-1] = internalAbortController.signal;
+        externalSignal.addEventListener('abort', () => internalAbortController.abort());
+    } else {
+        // 原传入实参中省略了AbortSignal
+        args.push(internalAbortController.signal);
+    }
+
     /**
      * 执行下载生成器函数得到的进度生成器对象
      */
@@ -420,6 +437,9 @@ export async function downloadWithUI<
             idTaskMap.set(id, taskId);
         }
     } catch (err) {
+        // 出错时立即中断下载
+        internalAbortController.abort();
+
         logger.simple('Error', 'download error');
         logger.asLevel('Error', err);
 

@@ -571,46 +571,58 @@ export class Queue {
  * 将一系列回调函数调用转化为AsyncGenerator的队列
  */
 export class AsyncQueue<T> {
-  private queue: T[] = [];
-  private resolvers: ((value: IteratorResult<T>) => void)[] = [];
-  private closed = false;
+    private queue: T[] = [];
+    private resolvers: ((value: IteratorResult<T>) => void)[] = [];
+    private closed = false;
+    private error: any = null;
 
-  // 由回调函数调用：向队列中推送新数据
-  push(value: T) {
-    if (this.closed) return;
-    if (this.resolvers.length > 0) {
-      const resolve = this.resolvers.shift()!;
-      resolve({ value, done: false });
-    } else {
-      this.queue.push(value);
-    }
-  }
-
-  // 由回调函数调用：通知队列流已结束
-  close() {
-    this.closed = true;
-    while (this.resolvers.length > 0) {
-      const resolve = this.resolvers.shift()!;
-      resolve({ value: undefined as any, done: true });
-    }
-  }
-
-  // 让队列本身具备异步迭代器接口
-  [Symbol.asyncIterator](): AsyncIterator<T> {
-    return {
-      next: (): Promise<IteratorResult<T>> => {
-        if (this.queue.length > 0) {
-          return Promise.resolve({ value: this.queue.shift()!, done: false });
+    /** 由回调函数调用：向队列中推送新数据 */
+    push(value: T) {
+        if (this.closed) return;
+        if (this.resolvers.length > 0) {
+            const resolve = this.resolvers.shift()!;
+            resolve({ value, done: false });
+        } else {
+            this.queue.push(value);
         }
-        if (this.closed) {
-          return Promise.resolve({ value: undefined as any, done: true });
+    }
+
+    /** 由回调函数调用：通知队列流已结束 */
+    close() {
+        this.closed = true;
+        while (this.resolvers.length > 0) {
+            const resolve = this.resolvers.shift()!;
+            resolve({ value: undefined as any, done: true });
         }
-        return new Promise<IteratorResult<T>>((resolve) => {
-          this.resolvers.push(resolve);
-        });
-      }
-    };
-  }
+    }
+
+    /** 由回调函数调用：通知出现错误需要关闭 */
+    destroy(error: any) {
+        if (this.closed) return;
+        this.closed = true;
+        this.error = error;
+        while (this.resolvers.length > 0) {
+            const resolve = this.resolvers.shift()!;
+            // 这里的正确姿势应该是让 next() 返回的 Promise reject 掉，但因为底层用的是 IteratorResult，
+            // 我们可以让 next 内部去 reject。为了好改造，我们在 next() 触发时检查。
+            resolve({ value: undefined as any, done: true });
+        }
+    }
+
+    // 让队列本身具备异步迭代器接口
+    [Symbol.asyncIterator](): AsyncIterator<T> {
+        return {
+            next: (): Promise<IteratorResult<T>> => {
+                if (this.error) return Promise.reject(this.error); // 优先抛出错误
+                if (this.queue.length > 0) return Promise.resolve({ value: this.queue.shift()!, done: false });
+                if (this.closed) return Promise.resolve({ value: undefined as any, done: true });
+
+                return new Promise<IteratorResult<T>>((resolve, reject) => {
+                    this.resolvers.push(res => this.error ? reject(this.error) : resolve(res));
+                });
+            }
+        };
+    }
 }
 
 /**
@@ -619,31 +631,47 @@ export class AsyncQueue<T> {
 export async function* mergeAsyncGenerators<
     T, TResult, TNext
 >(...generators: AsyncGenerator<T, TResult, TNext>[]) {
-    // 启动所有的生成器，拿到它们的迭代器对象
     const iterators = generators.map(g => g[Symbol.asyncIterator]());
-    
-    // 存储每个迭代器当前正在等待的 next() 承诺
     const nextPromises: (Promise<{
         index: number;
-        result: IteratorResult<T, TResult>;
+        result?: IteratorResult<T, TResult>;
+        error?: any;
     }> | null)[] = iterators.map((iter, index) => 
-        iter.next().then(result => ({ index, result }))
+        iter.next()
+            .then(result => ({ index, result }))
+            .catch(error => ({ index, error })) // 拦截错误
     );
 
     let activeCount = iterators.length;
+    try {
+        while (activeCount > 0) {
+            // 谁跑得快（无论是成功还是失败），就先响应谁
+            const item = await Promise.race(nextPromises.filter(p => p !== null));
+            const { index, result, error } = item;
 
-    while (activeCount > 0) {
-        // 谁跑得快，就先响应谁
-        const { index, result } = await Promise.race(nextPromises.filter(p => p !== null));
+            if (error) throw error;
 
-        if (result.done) {
-            activeCount--;
-            nextPromises[index] = null; // 该迭代器已结束，不再参与 race
-        } else {
-            // 产出该迭代器吐出来的状态
-            yield result.value;
-            // 接着让该迭代器持续跑下一步
-            nextPromises[index] = iterators[index].next().then(res => ({ index, result: res }));
+            if (result!.done) {
+                activeCount--;
+                nextPromises[index] = null;
+            } else {
+                yield result!.value;
+                
+                // 继续下一步，同样要记得加上 .catch() 保护
+                nextPromises[index] = iterators[index].next()
+                    .then(res => ({ index, result: res }))
+                    .catch(err => ({ index, error: err }));
+            }
+        }
+    } finally {
+        // 无论是正常结束还是因错误中断，确保清理所有其他迭代器
+        for (let i = 0; i < iterators.length; i++) {
+            // 如果这个迭代器还没结束，并且有 return 方法（Generator 标准接口）
+            if (nextPromises[i] !== null && typeof iterators[i].return === 'function') {
+                // 静默调用 return()，通知其内部执行 finally 块释放资源
+                // 这里由于会抛出错误，返回值已经无意义，这里为满足函数签名要求传入一个undefined断言为any
+                iterators[i].return(undefined as any).catch(() => {}); 
+            }
         }
     }
 }
