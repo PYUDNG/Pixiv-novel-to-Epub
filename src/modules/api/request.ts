@@ -94,8 +94,8 @@ async function _api<
                 if (response.status >= 400)
                     error = response;
                 // 模拟出错情形
-                else
-                    error = 'Mock Error';
+                //else
+                //    error = 'Mock Error';
             }
         }, signal);
 
