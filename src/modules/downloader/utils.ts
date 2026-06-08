@@ -174,7 +174,7 @@ export function toEpubHTML(content: string, isHTML: boolean = false): string {
             // 根据节点类型确定本行内容
             if (node instanceof HTMLElement) {
                 // HTMLElement节点：保持不变
-                addLine(node.innerHTML, node.innerText.length === 0);
+                addLine(node.outerHTML, node.innerText.length === 0);
             } else {
                 // 非HTMLElement节点：
                 switch (node.nodeName) {
