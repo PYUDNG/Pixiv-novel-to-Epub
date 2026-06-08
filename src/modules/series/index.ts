@@ -4,6 +4,8 @@ import { $CrE, createShadowApp, detectDom, isPixivDark, Nullable } from "@/utils
 import DownloadButton from "@/components/download-button.vue";
 import { downloadSeries, downloadWithUI } from "../downloader";
 import { GM_registerMenuCommand, GM_unregisterMenuCommand } from "$";
+import { ComponentProps } from "vue-component-type-helpers";
+import { reactive } from "vue";
 
 const { t } = i18n.global;
 const $series = i18nKeys.$series;
@@ -18,26 +20,36 @@ export default defineModule({
         // 获取小说信息
         const id = location.pathname.match(/\/novel\/series\/(\d+)/)![1];
 
+        // 响应式按钮props
+        const props: ComponentProps<typeof DownloadButton> = reactive({
+            label: t($series.$download),
+            callback: () => download(),
+            status: 'regular',
+        });
+
         // 当页面结构加载完毕时，创建下载按钮
         detectDom('main > section > div:first-child > div:last-child:nth-of-type(3)').then(async () => {
             const toolbar = await detectDom('main > section section');
             const host = toolbar.appendChild($CrE('div'));
-            createShadowApp(DownloadButton, {
-                host: host,
+            const { root } = await createShadowApp(DownloadButton, {
+                host, props,
                 options: {
                     app: {
                         classes: isPixivDark.value ? ['dark'] : [],
                     }
                 },
-                props: {
-                    label: t($series.$download),
-                    callback: () => downloadWithUI(downloadSeries, id),
-                },
             });
+            console.log(root);
         });
 
         // 创建脚本菜单
-        this.context!.downloadMenuId = GM_registerMenuCommand(t($series.$download), () => downloadWithUI(downloadSeries, id));
+        this.context!.downloadMenuId = GM_registerMenuCommand(t($series.$download), () => download());
+
+        async function download() {
+            props.status = 'loading';
+            await downloadWithUI(downloadSeries, id);
+            props.status = 'finished';
+        }
     },
     leave() {
         this.context!.downloadMenuId !== null &&

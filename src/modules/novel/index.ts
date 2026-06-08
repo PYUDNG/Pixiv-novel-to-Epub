@@ -4,6 +4,8 @@ import { $CrE, createShadowApp, detectDom, getUrlArgv, globalLogger, isPixivDark
 import DownloadButton from "@/components/download-button.vue";
 import { downloadNovel, downloadWithUI } from "../downloader";
 import { GM_registerMenuCommand, GM_unregisterMenuCommand } from "$";
+import { ComponentProps } from "vue-component-type-helpers";
+import { reactive } from "vue";
 
 const { t } = i18n.global;
 const $novel = i18nKeys.$novel;
@@ -22,27 +24,36 @@ export default defineModule({
             logger.simple('Error', 'url search param "id" not found');
             return;
         }
+        
+        // 响应式按钮props
+        const props: ComponentProps<typeof DownloadButton> = reactive({
+            label: t($novel.$download),
+            callback: () => download(),
+            status: 'regular',
+        });
 
         // 创建下载按钮
         detectDom('main > section > div:first-child > div:last-child:first-child > div:last-child:nth-of-type(2)').then(async () => {
             const toolbar = await detectDom('main > section section');
             const host = toolbar.appendChild($CrE('div'));
             createShadowApp(DownloadButton, {
-                host: host,
+                host, props,
                 options: {
                     app: {
                         classes: isPixivDark.value ? ['dark'] : [],
                     }
                 },
-                props: {
-                    label: t($novel.$download),
-                    callback: () => downloadWithUI(downloadNovel, id),
-                },
             });
         });
 
         // 创建脚本菜单
-        this.context!.downloadMenuId = GM_registerMenuCommand(t($novel.$download), () => downloadWithUI(downloadNovel, id));
+        this.context!.downloadMenuId = GM_registerMenuCommand(t($novel.$download), () => download());
+
+        async function download() {
+            props.status = 'loading';
+            await downloadWithUI(downloadNovel, id!);
+            props.status = 'finished';
+        }
     },
     leave() {
         this.context!.downloadMenuId !== null &&
