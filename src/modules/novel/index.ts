@@ -5,7 +5,7 @@ import DownloadButton from "@/components/download-button.vue";
 import { downloadNovel, downloadWithUI } from "../downloader";
 import { GM_registerMenuCommand, GM_unregisterMenuCommand } from "$";
 import { ComponentProps } from "vue-component-type-helpers";
-import { reactive } from "vue";
+import { reactive, watch } from "vue";
 
 const { t } = i18n.global;
 const $novel = i18nKeys.$novel;
@@ -36,7 +36,7 @@ export default defineModule({
         detectDom('main > section > div:first-child > div:last-child:first-child > div:last-child:nth-of-type(2)').then(async () => {
             const toolbar = await detectDom('main > section section');
             const host = toolbar.appendChild($CrE('div'));
-            createShadowApp(DownloadButton, {
+            const { container } = await createShadowApp(DownloadButton, {
                 host, props,
                 options: {
                     app: {
@@ -44,6 +44,7 @@ export default defineModule({
                     }
                 },
             });
+            watch(isPixivDark, dark => dark ? container.classList.add('dark') : container.classList.remove('dark'));
         });
 
         // 创建脚本菜单
