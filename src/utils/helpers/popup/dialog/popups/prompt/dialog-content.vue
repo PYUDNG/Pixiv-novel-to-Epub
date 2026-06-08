@@ -6,7 +6,10 @@ import ContentRenderer from '@/components/content-renderer.vue';
 import { inject } from 'vue';
 import { userInputKey } from './utils.ts';
 
-const props = withDefaults(defineProps<{
+const {
+    content = '',
+    value = '',
+} = defineProps<{
     /**
      * 显示内容
      */
@@ -16,12 +19,10 @@ const props = withDefaults(defineProps<{
      * 初始输入值
      */
     value?: string;
-}>(), {
-    content: '',
-    value: '',
-});
+}>();
 
 const userInput = inject(userInputKey)!;
+userInput.value = value;
 </script>
 
 <template>

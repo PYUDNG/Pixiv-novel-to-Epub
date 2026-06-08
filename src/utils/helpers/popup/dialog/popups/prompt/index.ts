@@ -51,7 +51,7 @@ const DEFAULT_OPTIONS: Required<PromptOptions> = {
 
 export async function prompt(content: string | DisplayContent, options: PromptOptions = {}) {
     // 参数处理
-    const fullOptions = Object.assign(DEFAULT_OPTIONS, options);
+    const fullOptions = Object.assign({}, DEFAULT_OPTIONS, options);
     const isDark = computed(() => fullOptions.dark === 'auto' ?
         isSystemDark.value :
         isRef(fullOptions.dark) ? fullOptions.dark.value : fullOptions.dark
@@ -78,6 +78,7 @@ export async function prompt(content: string | DisplayContent, options: PromptOp
                 comp: DialogContent,
                 props: {
                     content: content,
+                    value: fullOptions.value,
                 },
             },
             seamless: fullOptions.seamless,
