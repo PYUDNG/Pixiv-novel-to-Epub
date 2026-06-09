@@ -1,4 +1,5 @@
 import type { Component } from "vue";
+import { ComponentProps } from "vue-component-type-helpers";
 
 // #region Common Types
 export type SingleOrArray<T> = T | T[];
@@ -43,7 +44,7 @@ export interface HTMLContent {
 /**
  * Vue组件类渲染内容
  */
-export interface VueContent {
+export interface VueContent<C extends Component = Component> {
     /**
      * 类型
      */
@@ -57,11 +58,11 @@ export interface VueContent {
     /**
      * 传入props
      */
-    props: Record<string, any>;
+    props: ComponentProps<C>;
 }
 
 /**
  * 自定义渲染内容
  */
-export type DisplayContent = TextContent | HTMLContent | VueContent;
+export type DisplayContent<C extends Component = Component> = TextContent | HTMLContent | VueContent<C>;
 // #endregion

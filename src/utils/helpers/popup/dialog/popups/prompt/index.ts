@@ -6,7 +6,6 @@ import DialogContent from "./dialog-content.vue";
 import { computed, isRef, watch } from "vue";
 import type { Ref } from 'vue';
 import { createShadowApp } from "../../../../shadowapp.ts";
-import { ComponentProps } from "vue-component-type-helpers";
 
 const { t } = i18n.global;
 const $dialog = i18nKeys.$popup.$dialog;
@@ -40,6 +39,13 @@ export interface PromptOptions {
      * @default true
      */
     backdropDismiss?: boolean;
+
+    /**
+     * 输入框宽高比  
+     * 因为宽度依对话框可用宽度而定，因此此项调整的就是高度
+     * @default '7/3'
+     */
+    aspectRatio?: string;
 }
 const DEFAULT_OPTIONS: Required<PromptOptions> = {
     dark: 'auto',
@@ -47,6 +53,7 @@ const DEFAULT_OPTIONS: Required<PromptOptions> = {
     seamless: false,
     backdropDismiss: true,
     value: '',
+    aspectRatio: '7/3',
 };
 
 export async function prompt(content: string | DisplayContent, options: PromptOptions = {}) {
@@ -68,8 +75,9 @@ export async function prompt(content: string | DisplayContent, options: PromptOp
         props: {
             content: content,
             value: fullOptions.value,
+            aspectRatio: fullOptions.aspectRatio,
         },
-    } satisfies ComponentProps<typeof App>;
+    } satisfies DisplayContent<typeof DialogContent>;
     type InstantiatedApp = typeof App<typeof propsContent>;
     const { container, root } = await createShadowApp<InstantiatedApp>(App, {
         options: {

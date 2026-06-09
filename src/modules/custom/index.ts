@@ -76,6 +76,7 @@ export default defineModule({
                 value: inferCommonName(
                     (novels as PixivNovelAPIResponse[]).map(data => data.body.title), 3
                 ) ?? (novels[0] as PixivNovelAPIResponse).body.title,
+                aspectRatio: '5/1',
             });
             if (filename === null) return;
 
