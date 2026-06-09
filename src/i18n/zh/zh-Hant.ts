@@ -18,7 +18,7 @@ export default {
         download: '合併下載多篇小說',
         input: {
             header: '合併下載多篇小說',
-            content: '請輸入需要下載的小說的連結或ID，每行一個，或者在一行中使用空格或逗號分隔：',
+            content: '請輸入需要下載的小說的連結或ID\n每行一個，或者在一行中使用空格或逗號分隔：',
         },
         invalidInput: {
             header: '輸入格式錯誤',

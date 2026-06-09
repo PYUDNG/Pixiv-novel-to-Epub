@@ -20,12 +20,12 @@ defineExpose({ expose });
 <template>
     <!-- text -->
     <template v-if="typeof content === 'string'">
-        {{ content }}
+        <div class="whitespace-pre-wrap">{{ content }}</div>
     </template>
     
     <!-- text -->
     <template v-else-if="content.type === 'text'">
-        {{ content.text }}
+        <div class="whitespace-pre-wrap">{{ content.text }}</div>
     </template>
     
     <!-- html -->

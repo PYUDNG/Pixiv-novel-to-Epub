@@ -18,7 +18,7 @@ export default {
         download: 'Batch Download Novels',
         input: {
             header: 'Batch Download Novels',
-            content: 'Please enter the links or IDs of the novels to download, one per line, or separate multiple links/IDs with spaces or commas in a single line:',
+            content: 'Please enter the links or IDs of the novels to download\nOne per line, or separate multiple links/IDs with spaces or commas in a single line:',
         },
         invalidInput: {
             header: 'Invalid Input Format',

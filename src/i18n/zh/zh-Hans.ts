@@ -18,7 +18,7 @@ export default {
         download: '合并下载多篇小说',
         input: {
             header: '合并下载多篇小说',
-            content: '请输入需要下载的小说的链接或者ID，每行一个，或者在一行中使用空格或逗号分隔：',
+            content: '请输入需要下载的小说的链接或者ID\n每行一个，或者在一行中使用空格或逗号分隔：',
         },
         invalidInput: {
             header: '输入格式错误',
