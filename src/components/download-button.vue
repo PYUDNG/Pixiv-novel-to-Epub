@@ -28,7 +28,7 @@ const props = defineProps<{
 </script>
 
 <template>
-    <div class="pr-[20px] leading-[32px] font-[700]">
+    <div class="pr-[20px] leading-[32px] font-bold">
         <div
             class="
                 cursor-pointer
