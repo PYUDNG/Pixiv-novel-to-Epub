@@ -1,5 +1,5 @@
-<script setup lang="ts">
-import { inject, ref, useTemplateRef } from 'vue';
+<script setup lang="ts" generic="T extends string | DisplayContent">
+import { computed, inject, ref, useTemplateRef } from 'vue';
 import type { DisplayContent } from '../../../types';
 import ContentRenderer from '@/components/content-renderer.vue';
 import { OVERLAY_CONTAINER_KEY, OVERLAY_SHADOWHOST_KEY } from '../../shadowapp';
@@ -37,7 +37,7 @@ const {
      * 内容
      * @default ''
      */
-    content?: string | DisplayContent;
+    content?: T;
 
     /**
      * 沉浸模式，不展示背景遮罩层
@@ -229,7 +229,9 @@ function onClick(this: HTMLElement, e: PointerEvent, btn: Button) {
 // #endregion
 
 // #region Expose
-defineExpose({ show, hide, toggle, destroy });
+const body = useTemplateRef('body');
+const contentExposed = computed(() => body.value?.expose);
+defineExpose({ show, hide, toggle, destroy, content: contentExposed });
 // #endregion
 </script>
 
@@ -299,7 +301,7 @@ defineExpose({ show, hide, toggle, destroy });
                     px-5 py-5
                 "
             >
-                <ContentRenderer :content="content" ref="content" />
+                <ContentRenderer ref="body" :content="content" />
             </div>
 
             <!-- Footer -->

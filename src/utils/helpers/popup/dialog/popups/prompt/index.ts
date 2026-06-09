@@ -3,10 +3,10 @@ import type { Nullable, DisplayContent } from "../../../../../types/index.ts";
 import { isSystemDark } from "../../../../ui-utils.ts";
 import App from '../../app.vue';
 import DialogContent from "./dialog-content.vue";
-import { computed, isRef, ref, watch } from "vue";
-import { userInputKey } from "./utils.ts";
+import { computed, isRef, watch } from "vue";
 import type { Ref } from 'vue';
 import { createShadowApp } from "../../../../shadowapp.ts";
+import { ComponentProps } from "vue-component-type-helpers";
 
 const { t } = i18n.global;
 const $dialog = i18nKeys.$popup.$dialog;
@@ -61,11 +61,17 @@ export async function prompt(content: string | DisplayContent, options: PromptOp
     // 返回值
     const { promise, resolve } = Promise.withResolvers<Nullable<string>>();
 
-    // 通过provide/inject从GUI中获取用户输入
-    const userInput = ref<string>(fullOptions.value);
-
     // 挂载Dialog
-    const { container } = await createShadowApp(App, {
+    const propsContent = {
+        type: 'vue' as const,
+        comp: DialogContent,
+        props: {
+            content: content,
+            value: fullOptions.value,
+        },
+    } satisfies ComponentProps<typeof App>;
+    type InstantiatedApp = typeof App<typeof propsContent>;
+    const { container, root } = await createShadowApp<InstantiatedApp>(App, {
         options: {
             app: {
                 classes: isDark.value ? ['dark'] : [],
@@ -73,28 +79,18 @@ export async function prompt(content: string | DisplayContent, options: PromptOp
         },
         props: {
             header: fullOptions.header,
-            content: {
-                type: 'vue',
-                comp: DialogContent,
-                props: {
-                    content: content,
-                    value: fullOptions.value,
-                },
-            },
+            content: propsContent,
             seamless: fullOptions.seamless,
             backdropDismiss: fullOptions.backdropDismiss,
             buttons: [{
                 label: t($dialog.$prompt.$buttons.$ok),
                 serverity: 'primary',
-                callback: () => resolve(userInput.value),
+                callback: () => resolve(root.content?.value!),
             }, {
                 label: t($dialog.$prompt.$buttons.$cancel),
                 serverity: 'secondary',
                 callback: () => resolve(null),
             }],
-        },
-        provides: {
-            [userInputKey]: userInput,
         },
     });
 

@@ -1,11 +1,20 @@
 <!-- 渲染 string | DisplayContent 类型的内容的组件 -->
 
-<script setup lang="ts">
-import type { DisplayContent } from '@/utils';
+<script setup lang="ts" generic="C extends string | DisplayContent">
+import type { DisplayContent, VueContent } from '@/utils';
+import { computed, useTemplateRef } from 'vue';
+import { ComponentExposed } from 'vue-component-type-helpers';
 
-const props = defineProps<{
-    content: string | DisplayContent;
+const { content } = defineProps<{
+    content: C;
 }>();
+
+const comp = useTemplateRef('comp');
+const expose = computed(() => 
+    (comp.value && typeof content === 'object' && content.type === 'vue' ? comp.value : null) as
+    C extends VueContent ? ComponentExposed<C['comp']> : null
+);
+defineExpose({ expose });
 </script>
 
 <template>
@@ -26,6 +35,6 @@ const props = defineProps<{
     
     <!-- vue -->
     <template v-else-if="content.type === 'vue'">
-        <component :is="content.comp" v-bind="content.props" />
+        <component ref="comp" :is="content.comp" v-bind="content.props" />
     </template>
 </template>

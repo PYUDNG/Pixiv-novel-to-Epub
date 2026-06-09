@@ -3,8 +3,7 @@
 <script setup lang="ts">
 import type { DisplayContent } from '@/utils/types';
 import ContentRenderer from '@/components/content-renderer.vue';
-import { inject } from 'vue';
-import { userInputKey } from './utils.ts';
+import { ref } from 'vue';
 
 const {
     content = '',
@@ -21,8 +20,9 @@ const {
     value?: string;
 }>();
 
-const userInput = inject(userInputKey)!;
-userInput.value = value;
+const userInput = ref(value);
+
+defineExpose({ value: userInput });
 </script>
 
 <template>
