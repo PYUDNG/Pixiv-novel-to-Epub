@@ -22,11 +22,15 @@ export default defineConfig({
             userscript: {
                 name: {
                     '': 'Pixiv novel to Epub',
-                    'zh-CN': 'Pixiv小说Epub合成器'
+                    'zh-CN': 'Pixiv小说Epub合成器',
+                    'zh-TW': 'Pixiv小說Epub合成器',
+                    'zh-HK': 'Pixiv小說Epub合成器',
                 },
                 description: {
                     '': 'Download pixiv novels as Epub files',
                     'zh-CN': '下载Pixiv小说为Epub电子书文件',
+                    'zh-TW': '下載Pixiv小說為Epub電子書檔案',
+                    'zh-HK': '下載Pixiv小說為Epub電子書檔案',
                 },
                 icon: 'https://www.pixiv.net/favicon.ico',
                 namespace: 'https://greasyfork.org/users/667968-pyudng',
