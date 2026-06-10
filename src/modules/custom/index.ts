@@ -47,6 +47,7 @@ export default defineModule({
             );
 
             // 获取所有小说数据
+            let hasError = false;
             const p = await progress([], {
                 dark: isPixivDark,
                 seamless: true,
@@ -59,16 +60,24 @@ export default defineModule({
                     p.progress(taskId);
                     return data;
                 } catch(err) {
+                    hasError = true;
                     logger.simple('Error', 'custom download fetch novels data failed');
                     logger.asLevel('Error', err);
                     throw err;
                 }
             });
-            Promise.all(promises).then(() => {
-                p.complete(taskId);
-                p.destroy(PROGRESS_UI_DESTROY_DELAY);
-            });
-            const novels = await Promise.all(promises);
+            Promise.all(promises)
+                .then(() => p.complete(taskId))
+                .finally(() => p.destroy(PROGRESS_UI_DESTROY_DELAY));
+            const novels = await Promise.all(promises).catch(err => err as never);
+
+            if (hasError) {
+                await alert(t($custom.$novelApiError.$content), {
+                    header: $custom.$novelApiError.$header,
+                    backdropDismiss: false,
+                });
+                return;
+            };
             if (novels.some(data => data === AbortSymbol)) return;
 
             // 根据小说数据确定文件名

@@ -20,11 +20,15 @@ export default {
             header: '合併下載多篇小說',
             content: '請輸入需要下載的小說的連結或ID\n每行一個，或者在一行中使用空格或逗號分隔：',
         },
-        invalidInput: {
+        'novel-api-error': {
+            header: '合併下載多篇小說',
+            content: '獲取小說資料錯誤，請檢查輸入是否有誤，以及網路是否通暢',
+        },
+        'invalid-input': {
             header: '輸入格式錯誤',
             content: '請檢查輸入格式是否正確\n每行一個小說的連結或ID，或者在一行中使用空格或逗號分隔多個連結或ID',
         },
-        fetchingData: '正在獲取小說資料',
+        'fetching-data': '正在獲取小說資料',
         filename: {
             header: '合併下載多篇小說',
             content: '請輸入儲存Epub的檔案名稱：',
@@ -56,6 +60,12 @@ export default {
     },
     popup: {
         dialog: {
+            dialog: {
+                header: '預設標題',
+                buttons: {
+                    ok: '確定',
+                }
+            },
             alert: {
                 header: '提示',
                 buttons: {

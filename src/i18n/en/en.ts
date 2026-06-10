@@ -20,11 +20,15 @@ export default {
             header: 'Batch Download Novels',
             content: 'Please enter the links or IDs of the novels to download\nOne per line, or separate multiple links/IDs with spaces or commas in a single line:',
         },
-        invalidInput: {
+        'novel-api-error': {
+            header: 'Batch Download Novels',
+            content: 'Error fetching novel data. Please check your input and network connection.',
+        },
+        'invalid-input': {
             header: 'Invalid Input Format',
             content: 'Please check the input format.\nEnter one novel link or ID per line, or separate multiple links/IDs with spaces or commas in a single line.',
         },
-        fetchingData: 'Fetching novel data',
+        'fetching-data': 'Fetching novel data',
         filename: {
             header: 'Batch Download Novels',
             content: 'Please enter the filename for the saved Epub:',
@@ -56,6 +60,12 @@ export default {
     },
     popup: {
         dialog: {
+            dialog: {
+                header: 'Default Title',
+                buttons: {
+                    ok: 'OK',
+                }
+            },
             alert: {
                 header: 'Notice',
                 buttons: {

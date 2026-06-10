@@ -20,11 +20,15 @@ export default {
             header: '合并下载多篇小说',
             content: '请输入需要下载的小说的链接或者ID\n每行一个，或者在一行中使用空格或逗号分隔：',
         },
-        invalidInput: {
+        'novel-api-error': {
+            header: '合并下载多篇小说',
+            content: '获取小说数据错误，请检查输入是否有误，以及网络是否通畅',
+        },
+        'invalid-input': {
             header: '输入格式错误',
             content: '请检查输入格式是否正确\n每行一个小说的链接或者ID，或者在一行中使用空格或逗号分隔多个链接或者ID',
         },
-        fetchingData: '正在获取小说数据',
+        'fetching-data': '正在获取小说数据',
         filename: {
             header: '合并下载多篇小说',
             content: '请输入保存Epub的文件名：',
