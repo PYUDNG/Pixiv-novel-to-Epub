@@ -1,38 +1,38 @@
 # Pixiv Novel to Epub
 
-A Tampermonkey / Violentmonkey userscript that enables one-click EPUB download on [Pixiv](https://www.pixiv.net) novel pages. Supports single novel download, series collection download, and custom multi-novel merge download.
+A Tampermonkey / Violentmonkey userscript that enables one-click download of EPUB ebooks from [Pixiv](https://www.pixiv.net) novel pages. Supports single novel downloads, series collection downloads, and custom multi-novel merged downloads.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Vue 3](https://img.shields.io/badge/Vue-3-42b883?logo=vue.js)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite)](https://vitejs.dev/)
 
-> If you encounter errors or have feature suggestions, feel free to [open an issue](https://github.com/PYUDNG/pixiv-novel-to-epub/issues) for discussion.
+> If you encounter errors or have feature suggestions, feel free to [open an issue](https://github.com/PYUDNG/pixiv-novel-to-epub/issues) for discussion and resolution.
 
 ## ✨ Features
 
 ### 📖 Single Novel Download
-- Click the button on a single Pixiv novel page to download it as an EPUB file
-- Automatically retrieves metadata such as title, author, tags, and cover
+- Click the button on any Pixiv single novel page to download it as an EPUB file
+- Automatically retrieves metadata such as title, author, tags, and cover image
 - Images within the content are automatically embedded into the EPUB
 
 ### 📚 Series Collection
-- Download an entire series from a Pixiv novel series page, merged into one EPUB
+- Download an entire series from the Pixiv novel series page, merging it into a single EPUB
 - Series cover and all content are automatically included
-- Generates a complete table of contents automatically
+- A complete table of contents is automatically generated
 
 ### ✂️ Custom Collection
 - Manually input multiple novel IDs via the script menu
-- Supports direct input of numeric IDs or pasting full links
-- Merges and downloads as one EPUB with a custom filename
+- Supports entering numeric IDs directly or pasting full links
+- Merge and download as a single EPUB with a custom filename
 
 ### 🎨 Smart Dark Mode
-- Automatically follows the Pixiv page theme switch
+- Automatically follows the Pixiv page theme switching
 - UI always blends naturally for a seamless experience
 
 ### 🌐 Internationalization
 - Interface supports Simplified Chinese, Traditional Chinese, and English
-- Automatically matches browser language settings
+- Automatically matches the browser language setting
 
 ### ⏳ Progress Feedback
 - Real-time download progress display, with each step clearly visible
@@ -53,7 +53,7 @@ This project is licensed under [GPL-3.0](https://spdx.org/licenses/GPL-3.0-or-la
 ### 📚 Download a Series Collection
 1. Open a Pixiv novel series page (`pixiv.net/novel/series/xxx`)
 2. You will see a **download button** in the information bar at the top of the page
-3. Click the button, and the script will fetch all novels in the series and merge them into one EPUB
+3. Click the button, and the script will fetch all novels in the series and merge them into a single EPUB
 
 ### ✂️ Custom Collection Download
 1. On any Pixiv page, click the script name in the Tampermonkey menu
@@ -63,7 +63,7 @@ This project is licensed under [GPL-3.0](https://spdx.org/licenses/GPL-3.0-or-la
 
 > **Tip:** You can paste Pixiv novel links into the dialog, and the script will automatically extract the IDs.
 
-## 🙏 Acknowledgments
+## 🙏 Acknowledgements
 
 - [vite-plugin-monkey](https://github.com/lisonge/vite-plugin-monkey) - Vite plugin for building userscripts
 - [jEpub](https://github.com/lelinhtinh/jepub) - EPUB file generation library

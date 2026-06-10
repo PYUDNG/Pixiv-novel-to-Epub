@@ -65,11 +65,11 @@
 
 ## 🙏 致謝
 
-- [vite-plugin-monkey](https://github.com/lisonge/vite-plugin-monkey) - 用於建置使用者腳本的 Vite 插件
+- [vite-plugin-monkey](https://github.com/lisonge/vite-plugin-monkey) - 用於建構使用者腳本的 Vite 插件
 - [jEpub](https://github.com/lelinhtinh/jepub) - EPUB 檔案生成函式庫
 - [Vue.js](https://vuejs.org/) - 漸進式 JavaScript 框架
 - [TailwindCSS](https://tailwindcss.com/) - 實用優先的 CSS 框架
-- [Vite](https://vitejs.dev/) - 下一代前端建置工具
+- [Vite](https://vitejs.dev/) - 下一代前端建構工具
 - [Tampermonkey](https://www.tampermonkey.net/) - 流行的使用者腳本管理器
 - [Violentmonkey](https://violentmonkey.github.io/) - 開源的使用者腳本管理器
 

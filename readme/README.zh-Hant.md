@@ -78,20 +78,25 @@ npm run dev
 npm run build
 ```
 
-5. **後處理（美化+壓縮）**
+5. **如無需程式碼壓縮和美化，可以使用以下命令建置**
 ```bash
-npm run build:dist
+npm run build:deps && npm run build:raw
 ```
 
+6. **自動化AI翻譯README**
+- 建立`scripts/readme-builder/openai.config.ts`（可參考同目錄的`openai.config.d.ts`和`openai.congig.ts.template`），填寫自己的AI API配置
+- 修改`README.src.md`，使用您熟悉的語言編寫README，並支援使用 `<!-- condition:xxx -->` 語法進行條件渲染，具體格式可以參照專案內已有的`README.src.md`
+- 執行以下程式碼自動化翻譯和渲染所有語言和平台的README
+```bash
+npm run build:readme
+```
 #### 安裝使用者腳本
 
-建置完成後，會在專案 `/dist/` 目錄生成 `.user.js` 檔案，可以透過以下步驟安裝：
+建置完成後，會在專案 `/dist/` 目錄產生 `.user.js` 檔案，可以透過以下步驟安裝：
 - 開啟任一建置產物，複製其中全部程式碼內容
 - 安裝 Tampermonkey 或 Violentmonkey 瀏覽器擴充功能
-- 在擴充功能管理員中點擊「新增腳本」
-- 貼上建置生成的使用者腳本內容
-
-## 📁 專案結構
+- 在擴充功能管理器中點擊"新增新腳本"
+- 貼上建置產生的使用者腳本內容## 📁 專案結構
 
 ```
 pixiv-novel-to-epub/
@@ -108,7 +113,7 @@ pixiv-novel-to-epub/
 │   │   └── downloader/     # 下載引擎（EPUB 生成、進度管理）
 │   ├── utils/              # 工具函式
 │   │   └── helpers/        # DOM 操作、網路請求、UI 狀態等
-│   ├── main.ts             # 應用程式入口
+│   ├── main.ts             # 應用程式進入點
 │   └── loader.ts           # 模組載入器
 ├── scripts/                # 建置腳本
 │   ├── readme-builder/     # README 多語言建置工具
@@ -127,7 +132,9 @@ pixiv-novel-to-epub/
 - **EPUB 生成**: jEpub
 - **國際化**: vue-i18n
 - **圖示**: Material Symbols（透過 unplugin-icons）
-- **工具庫**: mitt, uuid, dedent## 📦 建置與部署
+- **工具庫**: mitt, uuid, dedent
+
+## 📦 建置與部署
 
 ### 開發測試
 ```bash
@@ -154,31 +161,31 @@ npm run build
 1. Fork 專案倉庫
 2. 建立功能分支
 3. 提交程式碼變更
-4. 撰寫清晰的提交訊息
+4. 撰寫清晰的提交資訊
 5. 建立 Pull Request
 
 ### PR 規範
 #### 程式碼規範
-本專案沒有硬性的程式碼規範要求，但請您確保您的程式碼至少能做到：
-- 保留有適當的註解
+本專案沒有硬性的程式碼規範要求，但是請您確保您的程式碼至少能做到：
+- 保留有合適的註解
 - 通過 TypeScript 型別檢查
 
 #### Commit 規範
-每條 commit 中可以包含多個更新內容，每個更新內容應寫成一條列表項
-每條更新內容應在列表項開頭處標明更新類型，並用英文冒號+空格（`: `）隔開：
+每條 commit 中可以包含多個更新內容，每個更新內容應當寫成一條列表項
+每條更新內容應當在列表項開頭處標明更新類型，並用英文冒號+空格（`: `）隔開：
 | 更新類型       | 描述                                                 |
 | :------------- | :--------------------------------------------------- |
 | `feat`         | 新功能新增                                           |
 | `improvement`  | 既有功能改進                                         |
-| `code`         | 功能無變化，僅程式碼（包含註解）修改（程式碼最佳化等） |
+| `code`         | 功能無變化，僅程式碼（包含註解）修改（程式碼最佳化等）     |
 | `performance`  | 功能無變化，僅效能改進                               |
 | `bug fix`      | 修復 bug                                             |
-| `i18n`         | 程式碼無變化，僅更新語言包                           |
+| `i18n`         | 程式碼無變化，僅更新語言包                             |
 | `maintenance`  | 程式碼無變化的其他更新，如：TODO 列表更新，依賴更新等等 |
-| `refactor`     | 功能無變化，程式碼整體重寫（重構）                   |
+| `refactor`     | 功能無變化，程式碼整體重寫（重構）                     |
 
-如果一條更新對應多個類型，以其最主要的類型撰寫
-commit 訊息應使用英文（或繁體中文）撰寫
+如果一條更新對應多個類型，以其最主要的類型書寫
+commit 訊息應當用英文（或者繁體中文）書寫
 
 commit 訊息範例：
 ```
@@ -188,7 +195,7 @@ commit 訊息範例：
 - maintenance: updated README
 ```
 
-以上 commit 訊息僅供範例。實際 commit 中，對於如此多的更新內容，應盡量分多次 commit 提交
+以上 commit 訊息僅作範例。實際 commit 中，對於如此多的更新內容，應當盡量分多次 commit 提交
 
 ## 📄 授權條款
 
@@ -199,7 +206,7 @@ commit 訊息範例：
 ### 📖 下載單篇小說
 1. 開啟任意 Pixiv 小說頁面（`pixiv.net/novel/show.php?id=xxx`）
 2. 在作者資訊欄旁邊會看到 **下載按鈕**
-3. 點擊按鈕，腳本將自動取得小說內容並產生 EPUB 檔案
+3. 點擊按鈕，腳本將自動取得小說內容並生成 EPUB 檔案
 
 ### 📚 下載系列合集
 1. 開啟 Pixiv 小說系列頁面（`pixiv.net/novel/series/xxx`）
@@ -212,15 +219,13 @@ commit 訊息範例：
 3. 在彈出的對話框中輸入小說 ID（每行一個，或以逗號分隔）
 4. 為合併檔案指定一個名稱，開始下載
 
-> **提示：** 您可以在對話框中貼上 Pixiv 小說連結，腳本會自動提取其中的 ID。
+> **提示：** 你可以在對話框中貼上 Pixiv 小說連結，腳本會自動提取其中的 ID。## 🙏 致謝
 
-## 🙏 致謝
-
-- [vite-plugin-monkey](https://github.com/lisonge/vite-plugin-monkey) - 用於建置使用者腳本的 Vite 外掛
-- [jEpub](https://github.com/lelinhtinh/jepub) - EPUB 檔案產生函式庫
+- [vite-plugin-monkey](https://github.com/lisonge/vite-plugin-monkey) - 用於建構使用者腳本的 Vite 插件
+- [jEpub](https://github.com/lelinhtinh/jepub) - EPUB 檔案生成函式庫
 - [Vue.js](https://vuejs.org/) - 漸進式 JavaScript 框架
 - [TailwindCSS](https://tailwindcss.com/) - 實用優先的 CSS 框架
-- [Vite](https://vitejs.dev/) - 下一代前端建置工具
+- [Vite](https://vitejs.dev/) - 下一代前端建構工具
 - [Tampermonkey](https://www.tampermonkey.net/) - 流行的使用者腳本管理器
 - [Violentmonkey](https://violentmonkey.github.io/) - 開源的使用者腳本管理器
 
