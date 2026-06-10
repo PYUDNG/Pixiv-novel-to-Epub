@@ -28,7 +28,10 @@ export default defineModule({
             if (input === null) return;
             const parts = input.trim().split(/[\r\n ,，]+/);
             if (parts.length === 0) return;
-            if (parts.some(str => !/^\d+$/.test(str) && !getUrlArgv('id', str))) {
+            if (parts.some(str => 
+                !/^\d+$/.test(str) &&
+                !(/^https?:\/\//.test(str) && getUrlArgv('id', str))
+            )) {
                 alert(t($custom.$invalidInput.$content), {
                     dark: isPixivDark,
                     header: t($custom.$invalidInput.$header),

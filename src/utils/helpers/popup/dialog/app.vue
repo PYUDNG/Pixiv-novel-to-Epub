@@ -8,7 +8,7 @@ import Button from '@/components/button.vue';
 import { addEventListener } from '@/hooks';
 import MaterialSymbolsClose from '~icons/material-symbols/close';
 
-interface Button extends ButtonProps {
+export interface Button extends ButtonProps {
     /**
      * 点击按钮后是否自动销毁弹窗
      * @default true

@@ -56,6 +56,12 @@ export default {
     },
     popup: {
         dialog: {
+            dialog: {
+                header: '默认标题',
+                buttons: {
+                    ok: '确定',
+                }
+            },
             alert: {
                 header: '提示',
                 buttons: {
