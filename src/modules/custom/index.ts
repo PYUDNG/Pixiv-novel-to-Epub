@@ -73,7 +73,7 @@ export default defineModule({
 
             if (hasError) {
                 await alert(t($custom.$novelApiError.$content), {
-                    header: $custom.$novelApiError.$header,
+                    header: t($custom.$novelApiError.$header),
                     backdropDismiss: false,
                 });
                 return;
