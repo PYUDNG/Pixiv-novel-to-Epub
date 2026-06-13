@@ -1,7 +1,9 @@
 import i18n, { i18nKeys } from "@/i18n/index.ts";
 import type { Nullable, DisplayContent } from "../../../../../types/index.ts";
+import { createVueContent } from "../../../../../types/index.ts";
 import DialogContent from "./dialog-content.vue";
-import { dialog, DialogOptions } from "../dialog.ts";
+import { createDialogApp } from "../../dialog.ts";
+import type { DialogOptions } from "../../dialog.ts";
 
 const { t } = i18n.global;
 const $dialog = i18nKeys.$popup.$dialog;
@@ -28,42 +30,45 @@ const DEFAULT_OPTIONS: Required<PromptOptions> = {
     aspectRatio: '7/3',
 };
 
+/**
+ * 弹窗输入文本，支持提示任意自定义内容，包含确定和取消两个按钮，返回一个在弹窗关闭后resolve的`Promise`
+ * @param content 自定义弹窗提示内容
+ * @param options 弹窗选项
+ * @returns 一个`Promise`，当点击确定时resolve为字符串内容，当直接关闭弹窗或点击取消时resolve为`null`
+ */
 export async function prompt(content: string | DisplayContent, options: PromptOptions = DEFAULT_OPTIONS) {
     // 参数处理
     const fullOptions = Object.assign({}, DEFAULT_OPTIONS, options);
 
     // 返回值
-    const {  } = Promise.withResolvers<Nullable<string>>();
-
-    // Dialog内容
-    const dialogContent = {
-        type: 'vue' as const,
-        comp: DialogContent,
-        props: {
-            content: content,
-            value: fullOptions.value,
-            aspectRatio: fullOptions.aspectRatio,
-        },
-    } satisfies DisplayContent<typeof DialogContent>;
+    const { promise, resolve } = Promise.withResolvers<Nullable<string>>();
 
     // 创建Dialog
-    const { promise, resolve, root } = await dialog<
-        Nullable<string>, typeof dialogContent
-    >(dialogContent, {
-        dark: fullOptions.dark,
-        header: fullOptions.header,
-        seamless: fullOptions.seamless,
-        backdropDismiss: fullOptions.backdropDismiss,
-        buttons: [{
-            label: t($dialog.$prompt.$buttons.$ok),
-            serverity: 'primary',
-            callback: () => resolve(root.content?.value!),
-        }, {
-            label: t($dialog.$prompt.$buttons.$cancel),
-            serverity: 'secondary',
-            callback: () => resolve(null),
-        }],
-    });
+    const { instance } = await createDialogApp(
+        createVueContent<typeof DialogContent>({
+            type: 'vue',
+            comp: DialogContent,
+            props: {
+                content: content,
+                value: fullOptions.value,
+                aspectRatio: fullOptions.aspectRatio,
+            },
+        }), {
+            dark: fullOptions.dark,
+            header: fullOptions.header,
+            seamless: fullOptions.seamless,
+            backdropDismiss: fullOptions.backdropDismiss,
+            buttons: [{
+                label: t($dialog.$prompt.$buttons.$ok),
+                serverity: 'primary',
+                callback: () => resolve(instance?.value ?? ''),
+            }, {
+                label: t($dialog.$prompt.$buttons.$cancel),
+                serverity: 'secondary',
+                callback: () => resolve(null),
+            }],
+        }
+    );
 
     return promise;
 }

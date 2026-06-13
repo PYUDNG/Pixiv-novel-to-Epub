@@ -89,7 +89,7 @@ let styling = import('@/styling.js');
 /**
  * 挂载Shadowroot，并在其中创建Vue App
  * @param hostId 
- * @returns 创建的Vue app的根组件实例
+ * @returns 创建的Vue app、根组件实例、Vue挂载容器和ShadowDOM宿主
  */
 export async function createShadowApp<
     T extends Component,

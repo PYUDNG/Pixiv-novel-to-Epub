@@ -1,12 +1,13 @@
-<script setup lang="ts" generic="T extends string | DisplayContent">
-import { computed, inject, ref, useTemplateRef } from 'vue';
-import type { DisplayContent } from '../../../types';
-import ContentRenderer from '@/components/content-renderer.vue';
+<script setup lang="ts" generic="C extends Component">
+import type { Component } from 'vue';
+import { inject, ref, useTemplateRef } from 'vue';
+import type { Nullable, VueContent } from '../../../types';
 import { OVERLAY_CONTAINER_KEY, OVERLAY_SHADOWHOST_KEY } from '../../shadowapp';
 import type { ButtonProps } from '@/components/button.vue';
 import Button from '@/components/button.vue';
 import { addEventListener } from '@/hooks';
 import MaterialSymbolsClose from '~icons/material-symbols/close';
+import { ComponentExposed } from 'vue-component-type-helpers';
 
 export interface Button extends ButtonProps {
     /**
@@ -19,7 +20,7 @@ export interface Button extends ButtonProps {
 // #region Props
 const {
     header = '',
-    content = '',
+    content,
     seamless = false,
     backdropDismiss = true,
     width = 130,
@@ -31,13 +32,13 @@ const {
      * 标题
      * @default ''
      */
-    header?: string | DisplayContent;
+    header?: string;
 
     /**
      * 内容
      * @default ''
      */
-    content?: T;
+    content: VueContent<C>;
 
     /**
      * 沉浸模式，不展示背景遮罩层
@@ -229,9 +230,8 @@ function onClick(this: HTMLElement, e: PointerEvent, btn: Button) {
 // #endregion
 
 // #region Expose
-const body = useTemplateRef('body');
-const contentExposed = computed(() => body.value?.expose);
-defineExpose({ show, hide, toggle, destroy, content: contentExposed });
+const body = useTemplateRef('body') as Nullable<ComponentExposed<C>>;
+defineExpose({ show, hide, toggle, destroy, content: body });
 // #endregion
 </script>
 
@@ -277,7 +277,7 @@ defineExpose({ show, hide, toggle, destroy, content: contentExposed });
                         font-bold
                     "
                 >
-                    <ContentRenderer :content="header" />
+                    {{ header }}
                 </div>
                 <div
                     class="
@@ -301,7 +301,7 @@ defineExpose({ show, hide, toggle, destroy, content: contentExposed });
                     px-5 py-5
                 "
             >
-                <ContentRenderer ref="body" :content="content" />
+                <component ref="body" :is="content.comp" v-bind="content.props" />
             </div>
 
             <!-- Footer -->

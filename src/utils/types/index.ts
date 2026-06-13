@@ -65,4 +65,17 @@ export interface VueContent<C extends Component = Component> {
  * 自定义渲染内容
  */
 export type DisplayContent<C extends Component = Component> = TextContent | HTMLContent | VueContent<C>;
+
+/**
+ * 创建 {@link VueContent} 类型的辅助函数
+ * @param content 
+ * @returns 
+ */
+export function createVueContent<
+    C extends Component
+>(
+    content: VueContent<C>,
+): VueContent<C> {
+    return content;
+}
 // #endregion

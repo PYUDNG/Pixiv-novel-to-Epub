@@ -1,10 +1,10 @@
 import i18n, { i18nKeys } from "@/i18n/index.ts";
-import type { DisplayContent } from "../../../../types/index.ts";
-import { isSystemDark } from "../../../ui-utils.ts";
-import App, { Button } from '../app.vue';
+import type { VueContent } from "../../../types/index.ts";
+import { isSystemDark } from "../../ui-utils.ts";
+import App, { Button } from './app.vue';
 import { computed, isRef, watch } from "vue";
-import type { Ref } from 'vue';
-import { createShadowApp } from "../../../shadowapp.ts";
+import type { Component, Ref } from 'vue';
+import { createShadowApp } from "../../shadowapp.ts";
 
 const { t } = i18n.global;
 const $dialog = i18nKeys.$popup.$dialog;
@@ -49,15 +49,14 @@ const DEFAULT_OPTIONS: Required<DialogOptions> = {
 };
 
 /**
- * 创建对话框的通用函数
+ * 使用 {@link createShadowApp} 创建悬浮窗口，并在其中渲染你的 Vue App
  * @param content 对话框内容
  * @param options 对话框选项
- * @returns 对话框控制器
+ * @returns 创建的Vue app、根组件实例、Vue挂载容器和ShadowDOM宿主
  */
-export async function dialog<
-    R extends any = void,
-    C extends string | DisplayContent = string,
->(content: C, options: DialogOptions = DEFAULT_OPTIONS) {
+export async function createDialogApp<
+    C extends Component,
+>(content: VueContent<C>, options: DialogOptions = DEFAULT_OPTIONS) {
     // 参数处理
     const fullOptions = Object.assign({}, DEFAULT_OPTIONS, options);
     const isDark = computed(() => fullOptions.dark === 'auto' ?
@@ -65,9 +64,6 @@ export async function dialog<
         isRef(fullOptions.dark) ? fullOptions.dark.value : fullOptions.dark
     );
     watch(isDark, dark => dark ? container.classList.add('dark') : container.classList.remove('dark'));
-
-    // 返回值
-    const { promise, resolve } = Promise.withResolvers<R>();
 
     // 挂载Dialog
     type InstantiatedApp = typeof App<C>;
@@ -91,23 +87,19 @@ export async function dialog<
     
     return {
         /**
-         * 对话框返回值
-         */
-        promise,
-
-        /**
-         * 控制对话框返回值的resolve函数  
-         * 通常在按钮被点击时调用以提供对话框返回值内容
-         */
-        resolve,
-
-        /**
          * 对话框根组件实例，暴露了多项对话框数据与控制方法  
+         * 注意：这个是对话框整体App的根组件实例，不是传入的对话框内容组件的实例  
          * 其中`.content`为传入的content的对外暴露值：
          * - 如果传入content为{@link VueContent}，`.content`值就是传入Vue组件的暴露对象
          * - 如果不是，`.content`值就是`null`
          */
         root,
+
+        /**
+         * 传入的内容组件的实例  
+         * 注意：由于组件初始创建期间可能尚未渲染完成，极短时间内可能为`null`
+         */
+        instance: root.content,
 
         /**
          * 挂载 Vue App 的宿主元素
@@ -117,7 +109,7 @@ export async function dialog<
         /**
          * 挂载的 Vue App 实例
          */
-        app, 
+        app,
 
         /**
          * 挂载 Shadow DOM 结构的宿主元素
