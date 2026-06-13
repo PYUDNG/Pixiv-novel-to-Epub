@@ -22,7 +22,7 @@ export default {
         },
         'novel-api-error': {
             header: 'Batch Download Novels',
-            content: 'Error fetching novel data. Please check your input and network connection.',
+            content: 'Error fetching novel data:\nPlease check your input and network connection.',
         },
         'invalid-input': {
             header: 'Invalid Input Format',

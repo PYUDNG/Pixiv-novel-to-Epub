@@ -30,7 +30,7 @@ export default {
         },
         'novel-api-error': {
             header: '合并下载多篇小说',
-            content: '获取小说数据错误，请检查输入是否有误，以及网络是否通畅',
+            content: '获取小说数据错误：\n请检查输入是否有误，以及网络是否通畅',
         },
         'invalid-input': {
             header: '输入格式错误',

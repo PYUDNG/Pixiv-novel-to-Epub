@@ -22,7 +22,7 @@ export default {
         },
         'novel-api-error': {
             header: '合併下載多篇小說',
-            content: '獲取小說資料錯誤，請檢查輸入是否有誤，以及網路是否通暢',
+            content: '獲取小說資料錯誤：\n請檢查輸入是否有誤，以及網路是否通暢',
         },
         'invalid-input': {
             header: '輸入格式錯誤',
