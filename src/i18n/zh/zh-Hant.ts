@@ -23,7 +23,7 @@ export default {
         download: '合併下載多篇小說',
         input: {
             header: '合併下載多篇小說',
-            content: '請輸入需要下載的小說的連結或ID\n輸入完畢後，使用 回車 或者 空格 加入到列表',
+            content: '請輸入需要下載的小說的連結或ID\n輸入完畢後，使用 回車、空格或逗號 加入到列表',
             buttons: {
                 ok: '確定',
                 cancel: '取消',

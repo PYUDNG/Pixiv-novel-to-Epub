@@ -23,7 +23,7 @@ export default {
         download: 'Batch Download Novels',
         input: {
             header: 'Batch Download Novels',
-            content: 'Please enter the link or ID of the novel to download\nPress Enter or Space after input to add to the list:',
+            content: 'Please enter the link or ID of the novel to download\nPress Enter, Space, or Comma after input to add to the list:',
             buttons: {
                 ok: 'OK',
                 cancel: 'Cancel',
