@@ -1,10 +1,17 @@
 import i18n, { i18nKeys } from "@/i18n/index.ts";
-import type { VueContent } from "../../../types/index.ts";
+import type { PromiseOrRaw, VueContent } from "../../../types/index.ts";
 import { isSystemDark } from "../../ui-utils.ts";
 import App, { Button } from './app.vue';
-import { computed, isRef, watch } from "vue";
-import type { Component, Ref } from 'vue';
+import { computed, isRef, reactive, watch } from "vue";
+import type { Component, InjectionKey, Ref } from 'vue';
 import { createShadowApp } from "../../shadowapp.ts";
+
+// #region DialogApp provide / inject keys
+/**
+ * provide / inject key: 弹窗按钮控制器
+ */
+export const BUTTON_CONTROLLER_KEY = Symbol('dialog-app-button-controller') as InjectionKey<DialogButtonController>;
+// #endregion
 
 const { t } = i18n.global;
 const $dialog = i18nKeys.$popup.$dialog;
@@ -36,7 +43,6 @@ export interface DialogOptions {
 
     /**
      * 对话框按钮列表
-     * @default [OK]
      */
     buttons: Button[];
 }
@@ -48,6 +54,29 @@ const DEFAULT_OPTIONS: Required<DialogOptions> = {
     buttons: [],
 };
 
+export interface DialogButtonController {
+    /**
+     * 禁用按钮
+     * @param index 第几个按钮（从0开始）
+     */
+    disable(index: number): void;
+    
+    /**
+     * 启用按钮
+     * @param index 第几个按钮（从0开始）
+     */
+    enable(index: number): void;
+
+    /**
+     * 注册click事件监听器  
+     * 该监听器将会在调用{@link createDialogApp}时声明的按钮回调之前优先执行  
+     * 多次调用本方法，将按照调用顺序执行
+     * @param index 第几个按钮（从0开始）
+     * @param callback 点击事件监听器
+     */
+    onClick(index: number, callback: (this: HTMLElement, e: PointerEvent) => PromiseOrRaw<any>): void;
+}
+
 /**
  * 使用 {@link createShadowApp} 创建悬浮窗口，并在其中渲染你的 Vue App
  * @param content 对话框内容
@@ -58,12 +87,40 @@ export async function createDialogApp<
     C extends Component,
 >(content: VueContent<C>, options: DialogOptions = DEFAULT_OPTIONS) {
     // 参数处理
-    const fullOptions = Object.assign({}, DEFAULT_OPTIONS, options);
+    const fullOptions = reactive(Object.assign({}, DEFAULT_OPTIONS, options));
     const isDark = computed(() => fullOptions.dark === 'auto' ?
         isSystemDark.value :
         isRef(fullOptions.dark) ? fullOptions.dark.value : fullOptions.dark
     );
     watch(isDark, dark => dark ? container.classList.add('dark') : container.classList.remove('dark'));
+
+    // provides
+    const buttons: DialogButtonController = {
+        disable(index) {
+            fullOptions.buttons[index].disabled = true;
+        },
+        enable(index) {
+            fullOptions.buttons[index].disabled = false;
+        },
+        onClick(index, callback) {
+            if (Array.isArray(fullOptions.buttons[index].callback)) {
+                // 插入到数组倒数第二位
+                const callbacks = fullOptions.buttons[index].callback;
+                callbacks.splice(Math.max(0, callbacks.length - 1), 0, callback);
+            } else {
+                // 转化为数组
+                fullOptions.buttons[index].callback = [
+                    callback,
+                    typeof fullOptions.buttons[index].callback !== 'undefined'
+                        ? fullOptions.buttons[index].callback
+                        : () => {},
+                ];
+            }
+        }
+    };
+    const provides: Record<string | symbol, any> = {
+        [BUTTON_CONTROLLER_KEY]: buttons,
+    };
 
     // 挂载Dialog
     type InstantiatedApp = typeof App<C>;
@@ -80,6 +137,7 @@ export async function createDialogApp<
             backdropDismiss: fullOptions.backdropDismiss,
             buttons: fullOptions.buttons,
         },
+        provides,
     });
 
     // @ts-expect-error 这里VueContent仅用于JSDoc注释，因此期望出现一个 未使用的导入 错误
@@ -115,5 +173,10 @@ export async function createDialogApp<
          * 挂载 Shadow DOM 结构的宿主元素
          */
         host,
+
+        /**
+         * 对话框按钮控制器
+         */
+        buttons,
     };
 }

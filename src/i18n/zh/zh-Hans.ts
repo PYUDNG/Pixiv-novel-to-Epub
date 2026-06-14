@@ -26,7 +26,12 @@ export default {
             content: '请输入需要下载的小说的链接或者ID\n输入完毕后，使用 回车 或者 空格 添加到列表',
             buttons: {
                 ok: '确定',
-            }
+                cancel: '取消',
+            },
+            invalid: {
+                common: '输入格式错误',
+                duplicate: '已添加过此书',
+            },
         },
         'novel-api-error': {
             header: '合并下载多篇小说',

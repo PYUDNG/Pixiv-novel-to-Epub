@@ -1,12 +1,14 @@
 import i18n, { i18nKeys } from "@/i18n";
 import { defineModule } from "../types";
-import { AbortSymbol, alert, getUrlArgv, globalLogger, isPixivDark, Nullable, prompt } from "@/utils";
+import { AbortSymbol, alert, createVueContent, globalLogger, isPixivDark, Nullable, prompt } from "@/utils";
 import { downloadCustom, downloadWithUI } from "../downloader";
 import { GM_registerMenuCommand, GM_unregisterMenuCommand } from "$";
 import { novel } from "../api";
 import { newTask, progress } from "@/utils/helpers/popup/progress";
 import MaterialSymbolsDataObject from '~icons/material-symbols/data-object';
 import { PixivNovelAPIResponse } from "../api/novel/types";
+import { createDialogApp } from "@/utils/helpers/popup/dialog/dialog";
+import App from "./app.vue";
 
 const PROGRESS_UI_DESTROY_DELAY = 3000;
 
@@ -20,31 +22,32 @@ export default defineModule({
         // 创建脚本菜单
         this.context!.downloadMenuId = GM_registerMenuCommand(t($custom.$download), async () => {
             // 输入小说列表
-            const input = await prompt(t($custom.$input.$content), {
-                dark: isPixivDark,
-                header: t($custom.$input.$header),
-                seamless: true,
-            });
-            if (input === null) return;
-            const parts = input.trim().split(/[\r\n ,，]+/);
-            if (parts.length === 0) return;
-            if (parts.some(str => 
-                !/^\d+$/.test(str) &&
-                !(/^https?:\/\//.test(str) && getUrlArgv('id', str))
-            )) {
-                alert(t($custom.$invalidInput.$content), {
+            const { promise, resolve } = Promise.withResolvers<Nullable<string[]>>();
+            const { instance } = await createDialogApp(
+                createVueContent<typeof App>({
+                    type: 'vue',
+                    comp: App,
+                    props: {},
+                }),
+                {
+                    header: t($custom.$input.$header),
                     dark: isPixivDark,
-                    header: t($custom.$invalidInput.$header),
-                });
-                return;
-            }
-            const ids = parts.map(str =>
-                parseInt(
-                    /^\d+$/.test(str) ?
-                        str :
-                        getUrlArgv('id', str)!
-                )
+                    seamless: true,
+                    buttons: [{
+                        label: t($custom.$input.$buttons.$ok),
+                        serverity: 'primary',
+                        callback: (): void => resolve(instance?.value ?? []),
+                    }, {
+                        label: t($custom.$input.$buttons.$cancel),
+                        serverity: 'secondary',
+                        callback: (): void => resolve(null),
+                    }]
+                },
             );
+            const strIds = await promise;
+            if (strIds === null) return;
+            if (strIds.length === 0) return;
+            const ids = strIds.map(str => parseInt(str, 10));
 
             // 获取所有小说数据
             let hasError = false;

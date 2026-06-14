@@ -17,6 +17,7 @@ export interface Button extends ButtonProps {
     destroy?: boolean;
 }
 
+
 // #region Props
 const {
     header = '',
@@ -218,20 +219,13 @@ function dragmove(e: MouseEvent) {
 }
 // #endregion
 
-// #region 按钮点击
-function onClick(this: HTMLElement, e: PointerEvent, btn: Button) {
-    try {
-        btn.callback?.call(this, e);
-    } finally {
-        const autoDestroy = btn.destroy || !Object.hasOwn(btn, 'destroy');
-        autoDestroy && destroy();
-    }
-}
-// #endregion
-
 // #region Expose
 const body = useTemplateRef('body') as Nullable<ComponentExposed<C>>;
-defineExpose({ show, hide, toggle, destroy, content: body });
+const btns = useTemplateRef('buttons');
+defineExpose({
+    show, hide, toggle, destroy,
+    content: body, buttons: btns,
+});
 // #endregion
 </script>
 
@@ -315,8 +309,15 @@ defineExpose({ show, hide, toggle, destroy, content: body });
             >
                 <Button
                     v-for="btn of buttons"
+                    ref="buttons"
                     v-bind="btn"
-                    :callback="function(e) { onClick.call(this, e, btn) }"
+                    :callback="[
+                        ...(
+                            Array.isArray(btn.callback)
+                                ? btn.callback
+                                : [btn.callback ?? (() => {})]
+                        ), () => { (btn.destroy ?? true) && destroy() }
+                    ]"
                 />
             </div>
         </div>

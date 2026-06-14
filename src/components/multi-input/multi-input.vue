@@ -2,34 +2,43 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import TextTag from './text-tag.vue';
-import { globalLogger } from '@/utils/index.ts';
+import { SingleOrArray } from '@/utils/index.ts';
 import { useI18n } from 'vue-i18n';
 import { i18nKeys } from '@/i18n/utils.ts';
 
 const { t } = useI18n();
 const $multiInput = i18nKeys.$components.$multiInput;
-const logger = globalLogger.withPath('components', 'multi-input');
 
 // #region props
 const {
-    delimiter = /(,| |[\n\r]+)/,
+    code = ['Enter', 'NumpadEnter'],
+    trim = true,
     allowEmpty = false,
     validate = _v => true,
+    preprocess = v => v,
 } = defineProps<{
     /**
-     * 用作字符串之间的分隔符的字符  
-     * 当用户输入到这些字符之一时，将会把之前的输入分隔为一个字符串，后续输入作为新的字符串  
-     * 支持字符串写法（如`', \n'`）、数组写法（如`[' ', '\n', ',']`）和正则表达式（如`/[ \n,]/`）
-     * @default /(,| |[\n\r]+)/
+     * 触发分隔的按键名  
+     * 当用户按下这些按键之一时，将会把之前的输入分隔为一个字符串，后续输入作为新的字符串  
+     * 接受单个按键名或按键名数组  
+     * 按键名可参考 {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/code#code_values}
+     * @default ['Enter', 'NumpadEnter']
      */
-    delimiter?: string | string[] | RegExp;
+    code?: SingleOrArray<string>;
+    
+    /**
+     * 是否自动去除字符串的首尾空白（`.trim()`）
+     * @default true
+     */
+    trim?: boolean;
 
     /**
      * 是否允许空字符串  
-     * 举个例子：未输入任何内容时敲击回车，是否添加一个空字符串到模型值
+     * 举个例子：未输入任何内容时敲击回车，是否添加一个空字符串到模型值  
+     * 注意：先根据`trim`属性去除首尾空白后，再判断是否为空字符串
      * @default false
      */
-    allowEmpty?: false,
+    allowEmpty?: boolean;
     
     /**
      * 数据验证方法  
@@ -38,7 +47,15 @@ const {
      * @param value 新字符串内容
      * @returns 代表是否合法的布尔值，或者一个字符串表示不合法原因（将被显示给用户）
      */
-    validate?(value: string): boolean | string,
+    validate?(value: string): boolean | string;
+
+    /**
+     * 数据预处理方法  
+     * 在即将添加新字符串之前，对用户输入的字符串进行预处理，可以改变字符串的值
+     * @param value 新字符串原始内容
+     * @returns 处理后最终添加到模型值中的字符串值
+     */
+    preprocess?(value: string): string;
 }>();
 // #endregion
 
@@ -48,6 +65,12 @@ const emit = defineEmits<{
      * 新字符串添加
      */
     add: [value: string];
+
+    /**
+     * 输入数据不合法  
+     * `reason`可能不存在（传入的validate函数可能返回false而不是字符串原因）
+     */
+    invalid: [value: string, reason?: string];
 }>();
 // #endregion
 
@@ -55,100 +78,93 @@ const emit = defineEmits<{
 const model = defineModel<string[]>({
     default: [],
 });
+
+/**
+ * 添加一个字符串到模型值
+ * @param str 字符串
+ */
+function add(str: string) {
+    model.value.push(str);
+}
 // #endregion
 
 // #region 输入框逻辑
+/**
+ * 内部`<input>`元素模型值
+ */
 const input = ref<string>('');
+
+/**
+ * 错误信息文本
+ */
 const error = ref<string>('');
 
 /**
- * input事件处理器，负责：
- * - 根据输入自动分隔字符串
- * - 空字符串验证
- * - 数据验证
- * - 字符串添加事件
- * @param _e 输入事件
+ * keydown事件处理器
+ * @param e 输入事件
  * @returns 返回值无所谓
  */
-function inputHandler(_e: InputEvent): any {
-    const result = testDelimiter();
-    if (!result.split) return;
+function onKeyDown(e: KeyboardEvent): void {
+    // 仅处理声明的按键
+    if (Array.isArray(code) ? !code.includes(e.code) : code !== e.code) return;
+
+    // 提交输入框内容到模型值
+    submit();
+
+    // 不再输入按键
+    e.preventDefault();
+}
+
+/**
+ * 将输入框内值添加到模型值，负责：
+ * - 根据输入自动分隔字符串
+ * - 空字符串验证
+ * - 数据验证 和 invalid事件
+ * - 字符串添加事件
+ * @param e 输入事件
+ * @returns 通过验证 ? 最终添加的值 : false
+ */
+function submit(): string | false {
+    // 当前值
+    const val = trim ? input.value.trim() : input.value;
 
     // 检查空字符串情况
-    if (result.value.length === 0 && !allowEmpty) return;
+    if (val.length === 0 && !allowEmpty) return false;
 
     // 数据验证
-    const valid = validate(result.value);
-    if (valid === false) return error.value = t($multiInput.$invalid);
-    if (typeof valid === 'string') return error.value = valid;
+    const valid = validate(val);
+    if (valid === false) {
+        error.value = t($multiInput.$invalid);
+        emit('invalid', val);
+        return false;
+    }
+    if (typeof valid === 'string') {
+        error.value = valid;
+        emit('invalid', val, valid);
+        return false;
+    }
     error.value = '';
-
-    // 将字符串添加到模型值
-    model.value.push(result.value);
 
     // 清空输入框
     input.value = '';
 
+    // 将字符串添加到模型值
+    const processed = preprocess(val);
+    model.value.push(processed);
+
     // 字符串添加事件
-    emit('add', result.value);
+    emit('add', val);
 
-    type DelimiterTestResult = {
-        /** 是否应当分隔 */
-        split: false;
-    } | {
-        /** 是否应当分隔 */
-        split: true;
-        /** 分隔符出来的完整字符串 */
-        value: string;
-    }
-    /**
-     * 检查输入文本是否应当触发分隔（是否以分隔符之一结尾） 
-     */
-    function testDelimiter(): DelimiterTestResult {
-        // 数组 或 字符串
-        if (Array.isArray(delimiter) || typeof delimiter === 'string') {
-            for (const d of delimiter) {
-                if (input.value.endsWith(d)) {
-                    return {
-                        split: true,
-                        value: input.value.substring(0, input.value.indexOf(d)),
-                    }
-                }
-            }
-            return { split: false };
-        }
-
-        // 正则表达式
-        if (delimiter instanceof RegExp) {
-            // 移除全局匹配和粘性匹配flags，并添加结尾
-            const safeFlags = delimiter.flags.replace(/[gy]/g, '');
-
-            // 已有结尾$符号时，去除$符号，确保后续添加后不重复
-            const hasDollar = delimiter.source.endsWith('$');
-            const source = hasDollar ? delimiter.source.slice(0, -1) : delimiter.source;
-
-            // 构建新的正则进行测试
-            const newRegex = new RegExp(`^([\s\S]*)(${source})$`, safeFlags);
-            const match = input.value.match(newRegex);
-
-            return match ? {
-                split: true,
-                value: match[1],
-            } : {
-                split: false,
-            };
-        }
-
-        // 理论不可达：delimiter类型均不属于上述分支
-        logger.simple('Error', 'Unexpected delimiter type');
-        logger.asLevel('Error', delimiter);
-        throw new TypeError('unexpected delimiter type');
-    }
+    return processed;
 }
 // #endregion
 
+// #region 输入框状态
+const focused = ref(false);
+// #endregion
+
 // #region expose
-defineExpose({ error });
+defineExpose({ error, input, add, submit });
 // #endregion
 </script>
 
@@ -158,34 +174,52 @@ defineExpose({ error });
             w-full
             flex flex-col gap-1
             text-surface-800 dark:text-surface-200
-            bg-surface-100 dark:bg-surface-800
+            bg-transparent
         "
     >
         <!-- 上方输入框 -->
         <div
             class="
                 w-full min-h-8
+                flex flex-row gap-2
                 text-surface-800 dark:text-surface-200
                 bg-surface-100 dark:bg-surface-800
-                border border-solid border-surface-300 dark:border-surface-700
-                focus-visible:outline-none focus-visible:border-primary-400
-                p-2
+                border border-solid
             "
+            :class="{
+                'border-primary-400 dark:border-primary-400': focused,
+                'border-surface-300 dark:border-surface-700': !focused,
+            }"
         >
-            <!-- 左侧显示所有已输入的字符串 -->
+            <!-- 把Tags和输入框放到一个容器里以应用flex-wrap自动换行 -->
             <div
-                class="flex flex-row items-center gap-1"
+                class="w-full flex flex-row flex-wrap items-center gap-1 p-2"
             >
-                <TextTag v-for="str of model" :text="str" />
-            </div>
+                <!-- 前面显示所有已输入的字符串 -->
+                <TextTag
+                    v-for="(str, i) of model"
+                    :text="str"
+                    @remove="model.splice(i, 1)"
+                />
 
-            <!-- 右侧输入框 -->
-            <textarea v-model="input" type="text" @input="inputHandler"></textarea>
+                <!-- 后面输入框 -->
+                <input
+                    v-model="input"
+                    type="text"
+                    class="
+                        w-30 grow shrink
+                        border-none outline-none
+                    "
+                    @keydown="onKeyDown"
+                    @focus="focused = true"
+                    @blur="focused = false"
+                >
+            </div>
         </div>
 
         <!-- 下方错误信息 -->
         <div
-            class="text-sm text-red-700 dark:text-red-500"
+            class="text-sm text-red-700 dark:text-red-400"
             :style="{
                 visibility: error ? 'visible' : 'hidden',
             }"

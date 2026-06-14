@@ -19,8 +19,8 @@ defineEmits<{
 <template>
     <div
         class="
-            flex flex-row items-center
-            rounded-full px-0.5
+            flex flex-row items-center gap-0.5
+            rounded-full pr-0.75 pl-1.5
             bg-surface-100 dark:bg-surface-900
         "
     >
@@ -32,7 +32,9 @@ defineEmits<{
             class="
                 flex justify-center items-center
                 rounded-full aspect-square
-                bg-surface-300 dark:bg-surface-700 hover:bg-surface-400 hover:dark:bg-surface-600
+                text-surface-900 bg-surface-400 dark:bg-surface-600 hover:bg-surface-500 active:bg-surface-500 hover:dark:bg-surface-500 active:dark:bg-surface-500
+                text-sm p-0.25
+                cursor-pointer
             "
             @click="$emit('remove')"
         >

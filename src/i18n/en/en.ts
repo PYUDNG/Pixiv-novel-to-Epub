@@ -1,6 +1,11 @@
 import dedent from "dedent";
 
 export default {
+    components: {
+        'multi-input': {
+            invalid: 'Invalid input',
+        },
+    },
     api: {
         'clear-cache': 'Clear Cache',
         'cache-cleared': {
@@ -18,7 +23,15 @@ export default {
         download: 'Batch Download Novels',
         input: {
             header: 'Batch Download Novels',
-            content: 'Please enter the links or IDs of the novels to download\nOne per line, or separate multiple links/IDs with spaces or commas in a single line:',
+            content: 'Please enter the link or ID of the novel to download\nPress Enter or Space after input to add to the list:',
+            buttons: {
+                ok: 'OK',
+                cancel: 'Cancel',
+            },
+            invalid: {
+                common: 'Invalid input format',
+                duplicate: 'Already added',
+            },
         },
         'novel-api-error': {
             header: 'Batch Download Novels',
@@ -26,7 +39,7 @@ export default {
         },
         'invalid-input': {
             header: 'Invalid Input Format',
-            content: 'Please check the input format.\nEnter one novel link or ID per line, or separate multiple links/IDs with spaces or commas in a single line.',
+            content: 'Please check the input format.\nEnter the link or ID of the novel, press Enter or Space after input to add to the list.',
         },
         'fetching-data': 'Fetching novel data',
         filename: {

@@ -1,6 +1,11 @@
 import dedent from "dedent";
 
 export default {
+    components: {
+        'multi-input': {
+            invalid: '輸入不合法',
+        },
+    },
     api: {
         'clear-cache': '清空緩存',
         'cache-cleared': {
@@ -18,7 +23,15 @@ export default {
         download: '合併下載多篇小說',
         input: {
             header: '合併下載多篇小說',
-            content: '請輸入需要下載的小說的連結或ID\n每行一個，或者在一行中使用空格或逗號分隔：',
+            content: '請輸入需要下載的小說的連結或ID\n輸入完畢後，使用 回車 或者 空格 加入到列表',
+            buttons: {
+                ok: '確定',
+                cancel: '取消',
+            },
+            invalid: {
+                common: '輸入格式錯誤',
+                duplicate: '已加入過此書',
+            },
         },
         'novel-api-error': {
             header: '合併下載多篇小說',
@@ -26,7 +39,7 @@ export default {
         },
         'invalid-input': {
             header: '輸入格式錯誤',
-            content: '請檢查輸入格式是否正確\n每行一個小說的連結或ID，或者在一行中使用空格或逗號分隔多個連結或ID',
+            content: '請檢查輸入格式是否正確\n輸入小說的連結或ID，輸入完畢後，使用 回車 或者 空格 加入到列表',
         },
         'fetching-data': '正在獲取小說資料',
         filename: {
