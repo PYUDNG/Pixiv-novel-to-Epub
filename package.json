@@ -1,7 +1,7 @@
 {
   "name": "pixiv-novel-to-epub",
   "private": true,
-  "version": "1.0.8",
+  "version": "1.0.9",
   "type": "module",
   "author": {
     "name": "PY-DNG"
