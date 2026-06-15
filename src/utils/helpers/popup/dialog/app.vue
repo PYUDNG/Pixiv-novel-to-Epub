@@ -136,6 +136,7 @@ function destroy() {
  * 弹窗主窗口
  */
 const dialog = useTemplateRef('dialog');
+const transform = ref('translate(-50%, -50%)');
 
 // 存储拖拽的核心状态
 const dragdata = {
@@ -210,7 +211,7 @@ function dragmove(e: MouseEvent) {
             if (dialog.value) {
                 // 特别注意：由于原本有 -translate-x-1/2 -translate-y-1/2 居中
                 // 我们在保留原居中变形的基础上，叠加拖拽的 px 像素位移
-                dialog.value.style.transform = `translate(calc(-50% + ${dragdata.translateX}px), calc(-50% + ${dragdata.translateY}px))`;
+                transform.value = `translate(calc(-50% + ${dragdata.translateX}px), calc(-50% + ${dragdata.translateY}px))`;
             }
             // 渲染完毕，解锁允许下一帧更新
             dragdata.ticking = false;
@@ -246,7 +247,7 @@ defineExpose({
             :style="{
                 width: typeof width === 'number' ? `calc(var(--spacing) * ${ width })` : width,
                 height: typeof height === 'number' ? `calc(var(--spacing) * ${ height })` : height,
-                transform: 'translate(-50%, -50%)',
+                transform: transform,
                 zIndex: zIndex + 1,
             }"
         >
