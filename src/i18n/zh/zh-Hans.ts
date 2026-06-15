@@ -32,6 +32,10 @@ export default {
                 common: '输入格式错误',
                 duplicate: '已添加过此书',
             },
+            preview: {
+                error: '小说数据加载失败',
+                loading: '加载中...',
+            }
         },
         'novel-api-error': {
             header: '合并下载多篇小说',

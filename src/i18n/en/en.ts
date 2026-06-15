@@ -32,6 +32,10 @@ export default {
                 common: 'Invalid input format',
                 duplicate: 'Already added',
             },
+            preview: {
+                error: 'Failed to load novel data',
+                loading: 'Loading...',
+            }
         },
         'novel-api-error': {
             header: 'Batch Download Novels',

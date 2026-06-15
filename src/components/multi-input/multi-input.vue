@@ -14,6 +14,7 @@ const {
     code = ['Enter', 'NumpadEnter'],
     trim = true,
     allowEmpty = false,
+    badge = true,
     validate = _v => true,
     preprocess = v => v,
 } = defineProps<{
@@ -39,6 +40,12 @@ const {
      * @default false
      */
     allowEmpty?: boolean;
+
+    /**
+     * 是否显示已输入值badge
+     * @default true
+     */
+    badge?: boolean;
     
     /**
      * 数据验证方法  
@@ -197,6 +204,7 @@ defineExpose({ error, input, add, submit });
             >
                 <!-- 前面显示所有已输入的字符串 -->
                 <TextTag
+                    v-if="badge"
                     v-for="(str, i) of model"
                     :text="str"
                     @remove="model.splice(i, 1)"

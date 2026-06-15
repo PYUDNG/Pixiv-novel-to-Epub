@@ -273,11 +273,13 @@ defineExpose({
                 >
                     {{ header }}
                 </div>
+
+                <!-- 关闭按钮 -->
                 <div
                     class="
                         absolute right-0 h-full aspect-square text-lg
                         flex justify-center items-center
-                        bg-transparent text-surface-400 hover:text-surface-300
+                        bg-transparent text-surface-600 dark:text-surface-400 hover:text-surface-500 dark:hover:text-surface-300
                         cursor-pointer
                     "
                     @mousedown.stop

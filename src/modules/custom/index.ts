@@ -35,11 +35,11 @@ export default defineModule({
                     seamless: true,
                     buttons: [{
                         label: t($custom.$input.$buttons.$ok),
-                        serverity: 'primary',
+                        severity: 'primary',
                         callback: (): void => resolve(instance?.value ?? []),
                     }, {
                         label: t($custom.$input.$buttons.$cancel),
-                        serverity: 'secondary',
+                        severity: 'secondary',
                         callback: (): void => resolve(null),
                     }]
                 },

@@ -32,6 +32,10 @@ export default {
                 common: '輸入格式錯誤',
                 duplicate: '已加入過此書',
             },
+            preview: {
+                error: '小說資料載入失敗',
+                loading: '載入中...',
+            }
         },
         'novel-api-error': {
             header: '合併下載多篇小說',

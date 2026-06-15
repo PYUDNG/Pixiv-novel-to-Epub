@@ -14,7 +14,7 @@ export interface ButtonProps {
      * 按钮级别
      * @default 'normal'
      */
-    serverity?: Severity;
+    severity?: Severity;
 
     /**
      * 是否禁用
@@ -34,7 +34,7 @@ const logger = globalLogger.withPath('components', 'button');
 
 const {
     label = '',
-    serverity = 'normal',
+    severity = 'normal',
     callback = [],
 } = defineProps<ButtonProps>();
 
@@ -60,7 +60,7 @@ async function onClick(this: HTMLElement, e: PointerEvent) {
             cursor-pointer
         "
         :class="[
-            `serverity-${ serverity }`,
+            `bg-severity-${ severity }`,
             disabled ? 'pointer-events-none' : '',
         ]"
         @click="onClick"

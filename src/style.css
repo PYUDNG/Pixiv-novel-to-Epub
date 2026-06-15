@@ -55,12 +55,12 @@
 }
 
 @layer components {
-  .serverity-normal,
-  .serverity-primary,
-  .serverity-secondary,
-  .serverity-success,
-  .serverity-warn,
-  .serverity-error {
+  .bg-severity-normal,
+  .bg-severity-primary,
+  .bg-severity-secondary,
+  .bg-severity-success,
+  .bg-severity-warn,
+  .bg-severity-error {
     background-color: var(--severity-color-light);
     @variant hover {
       background-color: color-mix(in srgb, var(--severity-color-light), #000 5%);
@@ -73,28 +73,80 @@
     }
   }
 
-  .serverity-normal {
+  .text-severity-normal,
+  .text-severity-primary,
+  .text-severity-secondary,
+  .text-severity-success,
+  .text-severity-warn,
+  .text-severity-error {
+    color: var(--severity-color-light);
+    @variant hover {
+      color: color-mix(in srgb, var(--severity-color-light), #000 5%);
+    }
+    @variant dark {
+      color: var(--severity-color-dark);
+    }
+    @variant dark:hover {
+      color: color-mix(in srgb, var(--severity-color-dark), #fff 10%);
+    }
+  }
+
+  .text-severity-normal, .bg-severity-normal {
     --severity-color-light: var(--color-surface-300);
     --severity-color-dark: var(--color-surface-500);
   }
-  .serverity-primary {
+  .text-severity-primary, .bg-severity-primary {
     --severity-color-light: var(--color-primary-300);
     --severity-color-dark: var(--color-primary-500);
   }
-  .serverity-secondary {
+  .text-severity-secondary, .bg-severity-secondary {
     --severity-color-light: var(--color-secondary-300);
     --severity-color-dark: var(--color-secondary-500);
   }
-  .serverity-success {
+  .text-severity-success, .bg-severity-success {
     --severity-color-light: var(--color-green-300);
     --severity-color-dark: var(--color-green-500);
   }
-  .serverity-warn {
+  .text-severity-warn, .bg-severity-warn {
     --severity-color-light: var(--color-yellow-300);
     --severity-color-dark: var(--color-yellow-500);
   }
-  .serverity-error {
+  .text-severity-error, .bg-severity-error {
     --severity-color-light: var(--color-red-300);
     --severity-color-dark: var(--color-red-500);
   }
+}
+
+@layer base {
+    /* 滚动条 */
+    * {
+        --scrollbar-thumb-color: rgba(0, 0, 0, 0.3);
+        --scrollbar-thumb-color-hover: rgba(0, 0, 0, 0.5);
+        --scrollbar-track-color: transparent;
+
+        @variant dark {
+            --scrollbar-thumb-color: rgba(255, 255, 255, 0.3);
+            --scrollbar-thumb-color-hover: rgba(255, 255, 255, 0.5);
+            --scrollbar-track-color: transparent;
+        }
+
+        scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
+        scrollbar-width: thin;
+
+        &::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb-color);
+            border-radius: 9999px;
+        }
+        &::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-color-hover);
+        }
+    }
+    
 }

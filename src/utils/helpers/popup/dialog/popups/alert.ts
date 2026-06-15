@@ -65,7 +65,7 @@ export async function alert(content: string | DisplayContent, options: AlertOpti
         ...fullOptions,
         buttons: [{
             label: t($dialog.$alert.$buttons.$ok),
-            serverity: 'primary',
+            severity: 'primary',
             callback: () => resolve(),
         }],
     });

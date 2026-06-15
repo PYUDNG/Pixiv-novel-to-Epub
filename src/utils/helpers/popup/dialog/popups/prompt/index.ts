@@ -60,11 +60,11 @@ export async function prompt(content: string | DisplayContent, options: PromptOp
             backdropDismiss: fullOptions.backdropDismiss,
             buttons: [{
                 label: t($dialog.$prompt.$buttons.$ok),
-                serverity: 'primary',
+                severity: 'primary',
                 callback: () => resolve(instance?.value ?? ''),
             }, {
                 label: t($dialog.$prompt.$buttons.$cancel),
-                serverity: 'secondary',
+                severity: 'secondary',
                 callback: () => resolve(null),
             }],
         }
