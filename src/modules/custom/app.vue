@@ -237,6 +237,8 @@ defineExpose({ value });
                     class="
                         flex justify-center items-center
                         px-3 py-2
+                        bg-surface-100 dark:bg-surface-900
+                        text-severity-error
                     "
                 >{{ t($custom.$input.$preview.$error) }}</div>
 
@@ -246,6 +248,7 @@ defineExpose({ value });
                     class="
                         flex justify-center items-center
                         px-3 py-2
+                        bg-surface-100 dark:bg-surface-900
                     "
                 >{{ t($custom.$input.$preview.$loading) }}</div>
 
