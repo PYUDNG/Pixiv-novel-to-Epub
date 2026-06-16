@@ -102,7 +102,6 @@ export async function getPixivBlob(url: string, signal?: AbortSignal): Promise<B
                     method: 'GET', url,
                     headers: {
                         referer: location.host === PIXIV_HOST ? location.href : PIXIV_DEFAULT_REFERRER,
-                        host: PIXIV_HOST,
                     },
                 }, signal),
                 signal,
