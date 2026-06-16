@@ -139,6 +139,26 @@ export function parseContent(
         return `<a href=${escJsStr(`#ChapterPage-${page}`)}>Jump to page ${htmlEncode(page)}</a>`;
     });
 
+    // 解析 '[b:加粗文本]'
+    html = html.replace(/\[b:([^\]]*)\]/g, (_, text) => {
+        return `<b style="font-weight: bold">${ text }</b>`;
+    });
+
+    // 解析 '[i:斜体文本]'
+    html = html.replace(/\[i:([^\]]*)\]/g, (_, text) => {
+        return `<i>${ text }</i>`;
+    });
+
+    // 解析 '[[emphasismark]:文本 > 着重号]]'
+    html = html.replace(/\[\[emphasismark:([^\[\]]+) *> *([^\[\]]+)\]\]/g, (_, text, symbol: string) => {
+        let style: string;
+        if (symbol === '•')
+            style = 'filled dot';
+        else
+            style = `&quot;${ symbol.substring(0, 1) }&quot;`;
+        return `<span style="text-emphasis-style: ${ style }; text-emphasis-position: over right;">${ text }</span>`;
+    });
+
     // 检查没有解析到的可能的标记
     let markers = Array.from(html.matchAll(/\[+[^\[\]]+\]+/g));
     markers = markers.filter(match => {
