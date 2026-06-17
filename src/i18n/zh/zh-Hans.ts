@@ -24,6 +24,9 @@ export default {
         input: {
             header: '合并下载多篇小说',
             content: '请输入需要下载的小说的链接或者ID\n输入完毕后，使用 回车、空格或逗号 添加到列表',
+            novel: '输入 小说ID 或 链接',
+            filename: '文件名',
+            'calc-filename': '生成',
             buttons: {
                 ok: '确定',
                 cancel: '取消',

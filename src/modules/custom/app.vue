@@ -10,6 +10,8 @@ import { useI18n } from 'vue-i18n';
 import Book from './book.vue';
 import { PixivNovelAPIResponse } from '../api/novel/types/novel.ts';
 import { novel } from '../api/index.ts';
+import { inferCommonName } from './utils.ts';
+import Button from '@/components/button.vue';
 
 const REG_PURE_NUMBER = /^\d+$/;
 
@@ -24,7 +26,7 @@ const {} = defineProps<{}>();
 const buttons = inject(BUTTON_CONTROLLER_KEY)!;
 // #endregion
 
-// #region 输入框
+// #region 小说列表输入框
 const input = useTemplateRef('input');
 // #endregion
 
@@ -33,6 +35,16 @@ const input = useTemplateRef('input');
  * 字符串id列表
  */
 const value = ref<string[]>([]);
+
+/**
+ * 文件名
+ */
+const filename = ref<string>('');
+
+/**
+ * 文件名是否已经被手动修改过
+ */
+const filenameEdited = ref<boolean>(false);
 
 // 实时加载小说api数据
 /**
@@ -89,6 +101,22 @@ const novels = computed<NovelData[]>(() =>
         // 按照dataMap，将id列表映射为数据列表
         .map(id => dataMap.get(id)!)
 );
+
+// 根据小说数据自动计算文件名
+const updateCommonFilename = () => {
+    // 提取全部已加载数据的小说的标题
+    const titles = novels.value.map(novel => {
+        if (isPromise(novel) || novel === ErrorSymbol) return null;
+        return novel.body.title;
+    }).filter(item => item !== null);
+
+    // 如果有共同名称，就用共同名称；否则就用第一本小说的标题；再否则（没有任何数据时）就是空字符串
+    filename.value = inferCommonName(titles) ?? titles[0] ?? '';
+};
+watch(novels, () => {
+    // 当数据发生变动时，若尚未手动修改过文件名，就自动计算文件名
+    if (!filenameEdited.value) updateCommonFilename();
+});
 
 // 当没有内容时禁用确定按钮
 watch(() => ({ input: input.value?.input, value }), ({ input, value }) => {
@@ -150,9 +178,26 @@ buttons.onClick(0, async _e => {
     // 这里无返回值也可以（只要不是false都行），但为了清晰还是写上
     return true;
 });
+// 按下确定按钮时文件名未指定，自动计算文件名
+buttons.onClick(0, async _e => {
+    // 已有文件名时无需计算
+    if (filename.value.trim().length) return;
+
+    // 设置加载状态
+    buttons.loading(0, true);
+
+    // 先等待数据加载完毕
+    await Promise.allSettled(novels.value.filter(n => isPromise(n)));
+
+    // 计算文件名
+    updateCommonFilename();
+
+    // 停止加载状态
+    buttons.loading(0, false);
+});
 // #endregion
 
-// #region 输入框逻辑
+// #region 小说列表输入框逻辑
 /**
  * 检查字符串是否合法
  * @param val 字符串
@@ -195,7 +240,7 @@ function isPromise<T>(val: any): val is Promise<T> {
 // #endregion
 
 // #region expose
-defineExpose({ value });
+defineExpose({ value, filename });
 // #endregion
 </script>
 
@@ -210,15 +255,46 @@ defineExpose({ value });
             <!-- 上方提示文本 -->
             <div class="whitespace-pre-wrap">{{ t($custom.$input.$content) }}</div>
 
-            <!-- 下方输入框 -->
-            <MultiInput
-                v-model="value"
-                ref="input"
-                :code="['Enter', 'NumpadEnter', 'Space', 'Comma', 'NumpadComma']"
-                :badge="false"
-                :validate="validate"
-                :preprocess="preprocess"
-            />
+            <!-- 中间小说列表输入框 -->
+            <div
+                class="flex flex-row gap-3"
+            >
+                <MultiInput
+                    v-model="value"
+                    ref="input"
+                    :placeholder="t($custom.$input.$novel)"
+                    :code="['Enter', 'NumpadEnter', 'Space', 'Comma', 'NumpadComma']"
+                    :badge="false"
+                    :validate="validate"
+                    :preprocess="preprocess"
+                />
+            </div>
+
+            <!-- 下方文件名输入框 -->
+            <div
+                class="flex flex-row gap-3"
+            >
+                <input
+                    v-model="filename"
+                    type="text"
+                    :placeholder="t($custom.$input.$filename)"
+                    class="
+                        grow shrink
+                        text-surface-800 dark:text-surface-200
+                        bg-surface-100 dark:bg-surface-800
+                        border border-solid border-surface-300 dark:border-surface-700
+                        focus-visible:outline-none focus-visible:border-primary-400
+                        p-2
+                    "
+                    @input="filenameEdited = true"
+                >
+                <Button
+                    :label="t($custom.$input.$calcFilename)"
+                    type="text"
+                    severity="normal"
+                    :callback="updateCommonFilename"
+                />
+            </div>
         </div>
 
         <!-- 下方书单 -->

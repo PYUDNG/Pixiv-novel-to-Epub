@@ -24,6 +24,9 @@ export default {
         input: {
             header: '合併下載多篇小說',
             content: '請輸入需要下載的小說的連結或ID\n輸入完畢後，使用 回車、空格或逗號 加入到列表',
+            novel: '輸入 小說ID 或 連結',
+            filename: '檔案名稱',
+            'calc-filename': '生成',
             buttons: {
                 ok: '確定',
                 cancel: '取消',

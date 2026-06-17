@@ -81,39 +81,63 @@
   .text-severity-error {
     color: var(--severity-color-light);
     @variant hover {
-      color: color-mix(in srgb, var(--severity-color-light), #000 5%);
+      color: color-mix(in srgb, var(--severity-color-light), #000 20%);
     }
     @variant dark {
       color: var(--severity-color-dark);
     }
     @variant dark:hover {
-      color: color-mix(in srgb, var(--severity-color-dark), #fff 10%);
+      color: color-mix(in srgb, var(--severity-color-dark), #fff 20%);
     }
   }
 
-  .text-severity-normal, .bg-severity-normal {
+  .text-severity-normal {
+    --severity-color-light: var(--color-surface-500);
+    --severity-color-dark: var(--color-surface-400);
+  }
+  .bg-severity-normal {
     --severity-color-light: var(--color-surface-300);
     --severity-color-dark: var(--color-surface-500);
   }
-  .text-severity-primary, .bg-severity-primary {
+  .text-severity-primary {
+    --severity-color-light: var(--color-primary-500);
+    --severity-color-dark: var(--color-primary-400);
+  }
+  .bg-severity-primary {
     --severity-color-light: var(--color-primary-300);
     --severity-color-dark: var(--color-primary-500);
   }
-  .text-severity-secondary, .bg-severity-secondary {
+  .text-severity-secondary {
+    --severity-color-light: var(--color-secondary-500);
+    --severity-color-dark: var(--color-secondary-400);
+  }
+  .bg-severity-secondary {
     --severity-color-light: var(--color-secondary-300);
     --severity-color-dark: var(--color-secondary-500);
   }
-  .text-severity-success, .bg-severity-success {
-    --severity-color-light: var(--color-green-300);
+  .text-severity-success {
+    --severity-color-light: var(--color-green-600);
     --severity-color-dark: var(--color-green-500);
   }
-  .text-severity-warn, .bg-severity-warn {
-    --severity-color-light: var(--color-yellow-300);
-    --severity-color-dark: var(--color-yellow-500);
+  .bg-severity-success {
+    --severity-color-light: var(--color-green-500);
+    --severity-color-dark: var(--color-green-800);
   }
-  .text-severity-error, .bg-severity-error {
+  .text-severity-warn {
+    --severity-color-light: var(--color-amber-600);
+    --severity-color-dark: var(--color-amber-400);
+  }
+  .bg-severity-warn {
+    --severity-color-light: var(--color-yellow-500);
+    --severity-color-dark: var(--color-yellow-700);
+  }
+  .text-severity-error {
+    --severity-color-light: var(--color-red-500);
+    --severity-color-dark: var(--color-red-400);
+  }
+  .bg-severity-error {
     --severity-color-light: var(--color-red-300);
-    --severity-color-dark: var(--color-red-500);
+    --severity-color-dark: var(--color-red-800);
   }
 }
 

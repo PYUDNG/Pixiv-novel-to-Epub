@@ -6,6 +6,7 @@ import type { Component } from 'vue';
 import MaterialSymbolsDeleteOutline from '~icons/material-symbols/delete-outline';
 import MaterialSymbolsKeyboardArrowUp from '~icons/material-symbols/keyboard-arrow-up';
 import MaterialSymbolsKeyboardArrowDown from '~icons/material-symbols/keyboard-arrow-down';
+import Button from '@/components/button.vue';
 
 // #region props
 const { id } = defineProps<{
@@ -73,12 +74,12 @@ const emit = defineEmits<{
 // #endregion
 
 // #region 操作按钮
-interface Button {
+interface ButtonDef {
     icon: Component;
     severity: Severity;
     callback: (this: HTMLElement, e: PointerEvent) => void;
 }
-const buttons: Button[] = [{
+const buttons: ButtonDef[] = [{
     icon: MaterialSymbolsKeyboardArrowUp,
     severity: 'normal',
     callback: () => emit('forward', id),
@@ -184,18 +185,15 @@ const buttons: Button[] = [{
                 p-1
             "
         >
-            <div
+            <Button
                 v-for="button of buttons"
-                class="
-                    flex justify-center items-center
-                    text-lg
-                    cursor-pointer
-                "
-                :class="[`text-severity-${ button.severity }`]"
-                @click="button.callback"
-            >
-                <component :is="button.icon" />
-            </div>
+                type="text"
+                :icon="button.icon"
+                :severity="button.severity"
+                :callback="button.callback"
+                dense
+                class="text-lg"
+            />
         </div>
     </div>
 </template>

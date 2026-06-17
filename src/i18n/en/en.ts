@@ -24,6 +24,9 @@ export default {
         input: {
             header: 'Batch Download Novels',
             content: 'Please enter the link or ID of the novel to download\nPress Enter, Space, or Comma after input to add to the list:',
+            novel: 'Enter Novel ID or Link',
+            filename: 'Filename',
+            'calc-filename': 'Generate',
             buttons: {
                 ok: 'OK',
                 cancel: 'Cancel',
