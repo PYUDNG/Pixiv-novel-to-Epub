@@ -68,6 +68,13 @@ export interface DialogButtonController {
     enable(index: number): void;
 
     /**
+     * 设置加载状态
+     * @param index 第几个按钮（从0开始）
+     * @param loading 是否处于加载中状态
+     */
+    loading(index: number, loading: boolean): void;
+
+    /**
      * 注册click事件监听器  
      * 该监听器将会在调用{@link createDialogApp}时声明的按钮回调之前优先执行  
      * 多次调用本方法，将按照调用顺序执行
@@ -101,6 +108,9 @@ export async function createDialogApp<
         },
         enable(index) {
             fullOptions.buttons[index].disabled = false;
+        },
+        loading(index, loading) {
+            fullOptions.buttons[index].loading = loading;
         },
         onClick(index, callback) {
             if (Array.isArray(fullOptions.buttons[index].callback)) {

@@ -15,6 +15,7 @@ const {
     trim = true,
     allowEmpty = false,
     badge = true,
+    placeholder = '',
     validate = _v => true,
     preprocess = v => v,
 } = defineProps<{
@@ -46,6 +47,12 @@ const {
      * @default true
      */
     badge?: boolean;
+
+    /**
+     * 输入框占位符
+     * @default ''
+     */
+    placeholder?: string;
     
     /**
      * 数据验证方法  
@@ -218,6 +225,7 @@ defineExpose({ error, input, add, submit });
                         w-30 grow shrink
                         border-none outline-none
                     "
+                    :placeholder="model.length === 0 || !badge ? placeholder : ''"
                     @keydown="onKeyDown"
                     @focus="focused = true"
                     @blur="focused = false"

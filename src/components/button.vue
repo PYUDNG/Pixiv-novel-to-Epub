@@ -1,20 +1,47 @@
 <!-- 按钮组件 -->
 <script setup lang="ts">
-import { globalLogger, PromiseOrRaw, SingleOrArray } from '@/utils';
+import { globalLogger, Nullable, PromiseOrRaw, SingleOrArray } from '@/utils';
 import type { Severity } from './types';
+import { computed } from 'vue';
+import type { Component } from 'vue';
+import MaterialSymbolsProgressActivity from '~icons/material-symbols/progress-activity';
 
 export interface ButtonProps {
     /**
      * 按钮文字
-     * @default ''
+     * @default null
      */
-    label?: string;
+    label?: Nullable<string>;
+
+    /**
+     * 按钮图标
+     * @default null
+     */
+    icon?: Nullable<Component>;
 
     /**
      * 按钮级别
      * @default 'normal'
      */
     severity?: Severity;
+
+    /**
+     * 按钮视觉风格
+     * @default 'filled'
+     */
+    type?: 'filled' | 'outline' | 'text';
+
+    /**
+     * 紧凑模式，占用更少的空间
+     * @default false
+     */
+    dense?: boolean;
+
+    /**
+     * 加载中状态
+     * @default false
+     */
+    loading?: boolean;
 
     /**
      * 是否禁用
@@ -33,10 +60,40 @@ export interface ButtonProps {
 const logger = globalLogger.withPath('components', 'button');
 
 const {
-    label = '',
+    label = null,
+    icon = null,
     severity = 'normal',
+    type = 'filled',
+    dense = false,
+    loading = false,
+    disabled = false,
     callback = [],
 } = defineProps<ButtonProps>();
+
+const stylingClass = computed<string>(() => {
+    let border: string, background: string, text: string;
+    switch (type) {
+        case 'filled': {
+            border = 'border-none';
+            background = `bg-severity-${ severity }`;
+            text = 'text-surface-800 dark:text-surface-200';
+            break;
+        }
+        case 'outline': {
+            border = 'border border-solid border-surface-300 dark:border-surface-700';
+            background = `bg-transparent`;
+            text = `text-severity-${ severity }`;
+            break;
+        }
+        case 'text': {
+            border = 'border-none';
+            background = `bg-transparent`;
+            text = `text-severity-${ severity }`;
+            break;
+        }
+    }
+    return [border, background, text].join(' ');
+});
 
 async function onClick(this: HTMLElement, e: PointerEvent) {
     const funcs = Array.isArray(callback) ? callback : [callback];
@@ -55,20 +112,31 @@ async function onClick(this: HTMLElement, e: PointerEvent) {
 <template>
     <div
         class="
-            px-5 py-1 relative
-            border-surface-300 dark:border-surface-700
+            flex justify-center items-center
+            relative
             cursor-pointer
         "
         :class="[
-            `bg-severity-${ severity }`,
+            stylingClass,
             disabled ? 'pointer-events-none' : '',
+            dense ? 'p-0' : 'px-5 py-1',
         ]"
         @click="onClick"
     >
         <!-- label -->
-        <slot>{{ label }}</slot>
+        <slot>
+            <template v-if="label !== null">
+                {{ label }}
+            </template>
+        </slot>
 
-        <!-- label -->
+        <!-- loading图标 -->
+        <MaterialSymbolsProgressActivity v-if="loading" class="animate-spin" />
+
+        <!-- 图标 -->
+        <component v-else-if="icon !== null" :is="icon" />
+
+        <!-- disabled遮罩 -->
         <div
             v-if="disabled"
             class="
