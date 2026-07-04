@@ -14,6 +14,7 @@ export default defineModule({
 
 export * from './request';
 export * from './novel';
+export * from './profile';
 
 // 创建脚本菜单：清空缓存
 GM_registerMenuCommand(t($api.$clearCache), () => {

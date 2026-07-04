@@ -1,5 +1,5 @@
-import { AbortSymbol, alert, AsyncQueue, escapeFilename, globalLogger, htmlEncode, isPixivDark, mergeAsyncGenerators, saveAs } from "@/utils";
-import { novel, series, seriesContent } from "../api";
+import { AbortSymbol, alert, asyncGenerator2Promise, AsyncQueue, escapeFilename, globalLogger, htmlEncode, isPixivDark, mergeAsyncGenerators, Queue, saveAs } from "@/utils";
+import { novel, series, seriesContent, userProfileAll, userProfileNovels } from "../api";
 import { defineModule } from "../types";
 import i18n, { i18nKeys } from "@/i18n";
 import jEpub from "jepub";
@@ -15,6 +15,7 @@ import type { Component } from "vue";
 import { AysncProgressYields, toEpubHTML, tojEpubLang, withProgressYields } from "./utils";
 import { GM_info } from "$";
 import { SeriesContentAPIPageItem } from "../api/novel/types";
+import { PixivUserProfileNovelsAPIResponse, UserProfileNovelsWork } from "../api/profile/types";
 
 const PROGRESS_UI_DESTROY_DELAY = 3000;
 
@@ -31,19 +32,27 @@ export default defineModule({
  * 下载进度报告类型
  */
 export type DownloadProgressType =
-    | 'novel-api'
-    | 'series-api'
-    | 'series-index'
-    | 'series-novel'
-    | 'cover'
-    | 'images'
-    | 'generate'
-    | 'save';
+    | 'novel'         // 单篇小说
+    | 'series'        // 系列小说
+    | 'profile-index' // 作者作品目录
+    | 'profile-data'  // 作者作品数据
+    | 'novel-api'     // 单篇小说数据
+    | 'series-api'    // 系列小说数据
+    | 'series-index'  // 系列小说目录
+    | 'series-novel'  // 系列小说章节
+    | 'cover'         // 封面图
+    | 'images'        // 插图
+    | 'generate'      // 生成Epub文件
+    | 'save';         // 保存文件
 
 /**
  * 下载进度报告类型 - 进度UI名称 对照表
  */
 export const TypeNameMap: Record<DownloadProgressType, string> = {
+    'novel': $progress.$novel,
+    'series': $progress.$series,
+    'profile-index': $progress.$profileIndex,
+    'profile-data': $progress.$profileData,
     'novel-api': $progress.$novelApi,
     'series-api': $progress.$seriesApi,
     'series-index': $progress.$seriesIndex,
@@ -58,6 +67,10 @@ export const TypeNameMap: Record<DownloadProgressType, string> = {
  * 下载进度报告类型 - 进度UI图标 对照表
  */
 export const TypeIconMap: Record<DownloadProgressType, Component> = {
+    'novel': MaterialSymbolsBook,
+    'series': MaterialSymbolsBook,
+    'profile-index': MaterialSymbolsListAltOutline,
+    'profile-data': MaterialSymbolsDataObject,
     'novel-api': MaterialSymbolsDataObject,
     'series-api': MaterialSymbolsDataObject,
     'series-index': MaterialSymbolsListAltOutline,
@@ -300,6 +313,107 @@ export async function* downloadSeries(
 
     // 交付Epub文件
     yield* saveBlob(blob, data.body.title, 'save');
+
+    return true;
+}
+
+/**
+ * 下载作者全部小说和系列小说作品  
+ * 单篇小说每篇一个文件，系列小说每个系列合并一个文件
+ * @param id 作者id
+ * @param signal 下载终止信号
+ * @returns 下载成功true，下载被取消false，出错时直接抛出错误
+ */
+export async function* downloadAuthor(
+    id: string | number,
+    signal?: AbortSignal,
+): AsyncGenerator<AysncProgressYields<DownloadProgressType>, boolean, void> {
+    // 获取全部作品目录
+    const index = yield* withProgressYields(
+        async complete => complete(await userProfileAll(id, signal)),
+        1,
+        'profile-index',
+    );
+    if (index === AbortSymbol || signal?.aborted) {
+        logger.simple('Info', 'download aborted');
+        return false;
+    }
+    /**
+     * 作者所有小说的ID列表
+     */
+    const novelIds = Object.keys(index.body.novels);
+
+    // 获取每一个作品的信息
+    const works = yield* withProgressYields(
+        async (complete, progress) => {
+            const promises: Promise<typeof AbortSymbol | PixivUserProfileNovelsAPIResponse>[] = [];
+            for (let i = 0; i < Object.keys(index.body.novels).length; i += 30) {
+                const pageIds = novelIds.slice(i, i + 30);
+                const promise = userProfileNovels(id, pageIds, signal);
+                promise.then(() => progress());
+                promises.push(promise);
+            }
+            const data = await Promise.all(promises);
+            if (data.some(item => item === AbortSymbol)) return AbortSymbol;
+            return complete(
+                (data as PixivUserProfileNovelsAPIResponse[])
+                    .reduce<Record<string, UserProfileNovelsWork>>(
+                        (data, resp) => Object.assign(data, resp.body.works), {})
+            );
+        },
+        novelIds.length,
+        'profile-index'
+    );
+    if (works === AbortSymbol || signal?.aborted) {
+        logger.simple('Info', 'download aborted');
+        return false;
+    }
+
+    /**
+     * 单篇小说的ID列表
+     */
+    const singleIds = novelIds.filter(id => !works[id].seriesId);
+    /**
+     * 小说系列的ID列表
+     */
+    const seriesIds = index.body.novelSeries.map(data => data.id);
+    
+    // 下载小说和系列小说：使用队列进行并发控制以取得较好的进度反馈用户体验
+    yield* mergeAsyncGenerators<
+        AysncProgressYields<DownloadProgressType>, boolean[], void
+    >(
+        // 单篇小说
+        withProgressYields(
+            async (complete, progress) => {
+                const queue = new Queue({ max: 5, sleep: 0 });
+                const promises = singleIds.map(id => queue.enqueue(async () => {
+                    const generator = downloadNovel(id, signal);
+                    const promise = asyncGenerator2Promise(generator);
+                    promise.then(() => progress());
+                    return promise;
+                }));
+                return complete(await Promise.all(promises))
+            },
+            singleIds.length,
+            'novel'
+        ),
+
+        // 系列小说
+        withProgressYields(
+            async (complete, progress) => {
+                const queue = new Queue({ max: 5, sleep: 0 });
+                const promises = seriesIds.map(id => queue.enqueue(async () => {
+                    const generator = downloadSeries(id, signal);
+                    const promise = asyncGenerator2Promise(generator);
+                    promise.then(() => progress());
+                    return promise;
+                }));
+                return complete(await Promise.all(promises))
+            },
+            seriesIds.length,
+            'series'
+        ),
+    );
 
     return true;
 }

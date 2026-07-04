@@ -25,7 +25,7 @@ export interface DialogOptions {
 
     /**
      * 标题文字
-     * @default '提示'
+     * @default '默认标题' 或由具体对话框实现覆写的默认值
      */
     header?: string;
     

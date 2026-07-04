@@ -677,6 +677,16 @@ export async function* mergeAsyncGenerators<
 }
 
 /**
+ * 将异步生成器转化为单个Promise，忽略yield值，resolve为异步生成器返回值
+ */
+export async function asyncGenerator2Promise<TReturn>(generator: AsyncGenerator<unknown, TReturn, unknown>): Promise<TReturn> {
+    while (true) {
+        const { done, value } = await generator.next();
+        if (done) return value;
+    }
+}
+
+/**
  * 块接口：用于区分普通文本和已替换的固定内容
  */
 export interface TextChunk {

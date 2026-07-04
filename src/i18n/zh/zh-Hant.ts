@@ -19,6 +19,10 @@ export default {
     series: {
         download: '下載Epub',
     },
+    author: {
+        download: '下載作者所有小說Epub',
+        confirm: '下載作者的全部小說和系列小說？',
+    },
     custom: {
         download: '合併下載多篇小說',
         input: {
@@ -64,6 +68,10 @@ export default {
             `,
         },
         progress: {
+            novel: '載入單篇小說',
+            series: '載入系列小說',
+            'profile-index': '載入作品列表',
+            'profile-data': '載入作品資料',
             'novel-api': '載入小說資料',
             'series-api': '載入系列資料',
             'series-index': '載入系列目錄',
@@ -90,6 +98,13 @@ export default {
                 header: '提示',
                 buttons: {
                     ok: '確定',
+                },
+            },
+            confirm: {
+                header: '確認',
+                buttons: {
+                    ok: '確定',
+                    cancel: '取消',
                 },
             },
             prompt: {
