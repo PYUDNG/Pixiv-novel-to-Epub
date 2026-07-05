@@ -26,6 +26,11 @@
 - 支援直接輸入數字 ID 或貼上完整連結
 - 合併下載為一本 EPUB，自訂檔案名稱
 
+### 👤 作者全部作品下載
+- 在 Pixiv 使用者主頁透過腳本選單一鍵下載作者全部小說
+- 單篇小說每篇獨立一個 EPUB，系列作品合併為一個 EPUB
+- 自動獲取作品索引，並發下載，高效快捷
+
 ### 🎨 智慧深色模式
 - 自動跟隨 Pixiv 頁面主題切換
 - UI 始終融合自然，無縫體驗
@@ -63,10 +68,16 @@
 
 > **提示：** 你可以在對話框中貼上 Pixiv 小說連結，腳本會自動提取其中的 ID。
 
+### 👤 下載作者全部作品
+1. 開啟任意 Pixiv 使用者主頁（`pixiv.net/users/xxx`）
+2. 在 Tampermonkey 選單中選擇 **下載該作者全部小說**
+3. 確認後，腳本將自動獲取該作者的全部小說和系列作品
+4. 單篇小說每篇獨立一個 EPUB 檔案，系列作品合併為一個 EPUB 檔案，自動儲存
+
 ## 🙏 致謝
 
 - [vite-plugin-monkey](https://github.com/lisonge/vite-plugin-monkey) - 用於建構使用者腳本的 Vite 插件
-- [jEpub](https://github.com/lelinhtinh/jepub) - EPUB 檔案生成函式庫
+- [jEpub](https://github.com/lelinhtinh/jepub) - EPUB 檔案生成庫
 - [Vue.js](https://vuejs.org/) - 漸進式 JavaScript 框架
 - [TailwindCSS](https://tailwindcss.com/) - 實用優先的 CSS 框架
 - [Vite](https://vitejs.dev/) - 下一代前端建構工具
