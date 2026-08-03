@@ -897,7 +897,10 @@ export function htmlEncode(
  */
 export function extractText(html: string): string {
     return $CrE('div', {
-        props: { innerHTML: html }
+        props: { innerHTML: html },
+        styles: {
+            whiteSpace: 'pre-wrap',
+        }
     }).innerText;
 }
 

@@ -27,6 +27,9 @@ const DEFAULT_OPTIONS: Required<PromptOptions> = {
     seamless: false,
     backdropDismiss: true,
     value: '',
+    icon: null,
+    width: 120,
+    height: 'fit-content',
     aspectRatio: '7/3',
 };
 

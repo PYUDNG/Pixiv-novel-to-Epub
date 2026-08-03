@@ -14,6 +14,9 @@ const DEFAULT_OPTIONS: Required<ConfirmOptions> = {
     header: t($dialog.$confirm.$header),
     seamless: false,
     backdropDismiss: true,
+    icon: null,
+    width: 120,
+    height: 'fit-content',
 };
 
 /**

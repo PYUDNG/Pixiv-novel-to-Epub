@@ -32,10 +32,12 @@ export interface ButtonProps {
     type?: 'filled' | 'outline' | 'text';
 
     /**
-     * 紧凑模式，占用更少的空间
-     * @default false
+     * 按钮内边距类名  
+     * 注意由于此属性值实际上会被作为类名添加到元素，理论上可以添加任意类名，但是**请不要这么做**  
+     * 遵守单一职责原则是写代码的最佳实践，如需添加自定义类名，请用vue原生支持的class透传
+     * @default 'px-5 py-1'
      */
-    dense?: boolean;
+    padding?: string;
 
     /**
      * 加载中状态
@@ -52,7 +54,8 @@ export interface ButtonProps {
     /**
      * 按钮回调  
      * 接受单个回调函数或数组  
-     * 以数组传入时，按照顺序执行回调（异步则`await`），返回值若为`false`，不再继续执行后续回调
+     * 以数组传入时，按照顺序执行回调（异步则`await`），返回值若为`false`，不再继续执行后续回调  
+     * 注：按钮组件本身也支持常规的`click`事件，此属性仅用于中间件式处理链式回调，如需简单事件回调推荐使用`@click`
      */
     callback?: SingleOrArray<(this: HTMLElement, e: PointerEvent) => PromiseOrRaw<any>>;
 }
@@ -64,11 +67,16 @@ const {
     icon = null,
     severity = 'normal',
     type = 'filled',
-    dense = false,
+    padding = 'px-5 py-1',
     loading = false,
     disabled = false,
     callback = [],
 } = defineProps<ButtonProps>();
+
+const emit = defineEmits<{
+    /** 通常的按钮按下事件 */
+    click: [e: PointerEvent];
+}>();
 
 const stylingClass = computed<string>(() => {
     let border: string, background: string, text: string;
@@ -96,6 +104,10 @@ const stylingClass = computed<string>(() => {
 });
 
 async function onClick(this: HTMLElement, e: PointerEvent) {
+    // 常规click事件冒泡
+    emit('click', e);
+
+    // callback链式回调
     const funcs = Array.isArray(callback) ? callback : [callback];
     for (const cb of funcs) {
         try {
@@ -114,12 +126,12 @@ async function onClick(this: HTMLElement, e: PointerEvent) {
         class="
             flex justify-center items-center
             relative
-            cursor-pointer
+            cursor-pointer select-none
         "
         :class="[
             stylingClass,
             disabled ? 'pointer-events-none' : '',
-            dense ? 'p-0' : 'px-5 py-1',
+            padding,
         ]"
         @click="onClick"
     >

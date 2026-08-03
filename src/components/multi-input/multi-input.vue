@@ -2,9 +2,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import TextTag from './text-tag.vue';
-import { SingleOrArray } from '@/utils/index.ts';
+import { PromiseOrRaw, SingleOrArray } from '@/utils/index.ts';
 import { useI18n } from 'vue-i18n';
 import { i18nKeys } from '@/i18n/utils.ts';
+import MaterialSymbolsProgressActivity from '~icons/material-symbols/progress-activity';
 
 const { t } = useI18n();
 const $multiInput = i18nKeys.$components.$multiInput;
@@ -61,7 +62,7 @@ const {
      * @param value 新字符串内容
      * @returns 代表是否合法的布尔值，或者一个字符串表示不合法原因（将被显示给用户）
      */
-    validate?(value: string): boolean | string;
+    validate?(value: string): Promise<boolean | string>;
 
     /**
      * 数据预处理方法  
@@ -69,7 +70,7 @@ const {
      * @param value 新字符串原始内容
      * @returns 处理后最终添加到模型值中的字符串值
      */
-    preprocess?(value: string): string;
+    preprocess?(value: string): PromiseOrRaw<SingleOrArray<string>>;
 }>();
 // #endregion
 
@@ -78,7 +79,7 @@ const emit = defineEmits<{
     /**
      * 新字符串添加
      */
-    add: [value: string];
+    add: [value: SingleOrArray<string>];
 
     /**
      * 输入数据不合法  
@@ -114,6 +115,12 @@ const input = ref<string>('');
 const error = ref<string>('');
 
 /**
+ * 加载中状态  
+ * 用于preprocess和validate中的调用方异步逻辑
+ */
+const loading = ref<boolean>(false);
+
+/**
  * keydown事件处理器
  * @param e 输入事件
  * @returns 返回值无所谓
@@ -138,38 +145,60 @@ function onKeyDown(e: KeyboardEvent): void {
  * @param e 输入事件
  * @returns 通过验证 ? 最终添加的值 : false
  */
-function submit(): string | false {
-    // 当前值
-    const val = trim ? input.value.trim() : input.value;
+async function submit(): Promise<SingleOrArray<string> | false> {
+    if (loading.value) throw new Error('attempt to submit while loading');
+    loading.value = true;
 
-    // 检查空字符串情况
-    if (val.length === 0 && !allowEmpty) return false;
+    try {
+        // 当前值
+        const val = trim ? input.value.trim() : input.value;
 
-    // 数据验证
-    const valid = validate(val);
-    if (valid === false) {
-        error.value = t($multiInput.$invalid);
-        emit('invalid', val);
-        return false;
+        // 检查空字符串情况
+        if (val.length === 0 && !allowEmpty) return false;
+
+        // 数据验证
+        error.value = '';
+        const valid = await validate(val);
+        if (valid === false) {
+            error.value = t($multiInput.$invalid);
+            emit('invalid', val);
+            return false;
+        }
+        if (typeof valid === 'string') {
+            error.value = valid;
+            emit('invalid', val, valid);
+            return false;
+        }
+
+        // 清空输入框
+        input.value = '';
+
+        // 将字符串添加到模型值
+        const processed = await preprocess(val);
+        if (Array.isArray(processed))
+            model.value.push(...processed);
+        else
+            model.value.push(processed);
+
+        // 字符串添加事件
+        if (Array.isArray(processed))
+            emit('add', processed)
+        else
+            emit('add', processed);
+
+        return processed;
+    } finally {
+        loading.value = false;
     }
-    if (typeof valid === 'string') {
-        error.value = valid;
-        emit('invalid', val, valid);
-        return false;
-    }
-    error.value = '';
+}
 
-    // 清空输入框
-    input.value = '';
-
-    // 将字符串添加到模型值
-    const processed = preprocess(val);
-    model.value.push(processed);
-
-    // 字符串添加事件
-    emit('add', val);
-
-    return processed;
+/**
+ * 设定输入框的错误消息  
+ * 设置为空字符串可以隐藏错误消息
+ * @param msg 错误消息
+ */
+function setError(msg: string) {
+    error.value = msg;
 }
 // #endregion
 
@@ -178,7 +207,7 @@ const focused = ref(false);
 // #endregion
 
 // #region expose
-defineExpose({ error, input, add, submit });
+defineExpose({ error, input, loading, add, submit, setError });
 // #endregion
 </script>
 
@@ -194,6 +223,7 @@ defineExpose({ error, input, add, submit });
         <!-- 上方输入框 -->
         <div
             class="
+                relative
                 w-full min-h-8
                 flex flex-row gap-2
                 text-surface-800 dark:text-surface-200
@@ -230,15 +260,26 @@ defineExpose({ error, input, add, submit });
                     @focus="focused = true"
                     @blur="focused = false"
                 >
+
+                <!-- 最后loading状态 -->
+                <MaterialSymbolsProgressActivity v-if="loading" class="animate-spin" />
+
+                <!-- loading遮罩 -->
+                <div
+                    v-if="loading"
+                    class="
+                        absolute top-0 left-0 w-full h-full
+                        backdrop-brightness-75 backdrop-grayscale-100
+                        cursor-not-allowed
+                    "
+                ></div>
             </div>
         </div>
 
         <!-- 下方错误信息 -->
         <div
+            v-show="!!error"
             class="text-sm text-red-700 dark:text-red-400"
-            :style="{
-                visibility: error ? 'visible' : 'hidden',
-            }"
         >{{ error }}</div>
     </div>
 </template>

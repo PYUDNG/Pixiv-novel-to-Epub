@@ -1,13 +1,16 @@
 <script setup lang="ts" generic="C extends Component">
-import type { Component } from 'vue';
-import { inject, ref, useTemplateRef } from 'vue';
+import type { Component, Ref } from 'vue';
+import { computed, inject, ref, useTemplateRef } from 'vue';
+import type { ComponentExposed } from 'vue-component-type-helpers';
 import type { Nullable, VueContent } from '../../../types';
 import { OVERLAY_CONTAINER_KEY, OVERLAY_SHADOWHOST_KEY } from '../../shadowapp';
 import type { ButtonProps } from '@/components/button.vue';
 import Button from '@/components/button.vue';
 import { addEventListener } from '@/hooks';
 import MaterialSymbolsClose from '~icons/material-symbols/close';
-import { ComponentExposed } from 'vue-component-type-helpers';
+import MaterialSymbolsHighlightMouseCursor from '~icons/material-symbols/highlight-mouse-cursor'
+import { useI18n } from 'vue-i18n';
+import { i18nKeys } from '@/i18n';
 
 export interface Button extends ButtonProps {
     /**
@@ -17,9 +20,12 @@ export interface Button extends ButtonProps {
     destroy?: boolean;
 }
 
+const { t } = useI18n();
+const $app = i18nKeys.$popup.$dialog.$app;
 
 // #region Props
 const {
+    icon = null,
     header = '',
     content,
     seamless = false,
@@ -29,6 +35,12 @@ const {
     zIndex = 1000,
     buttons = [],
 } = defineProps<{
+    /**
+     * 图标
+     * @default null
+     */
+    icon: Nullable<Component>;
+
     /**
      * 标题
      * @default ''
@@ -63,7 +75,7 @@ const {
     /**
      * 对话框高度  
      * CSS字符串值，或者number像素值
-     * @default 90
+     * @default 'fit-content'
      */
     height?: string | number;
 
@@ -102,6 +114,34 @@ const container = inject(OVERLAY_CONTAINER_KEY)!;
 const visible = ref(true);
 
 /**
+ * 弹窗穿透  
+ * 处于穿透状态时，弹窗除标题栏外均为半透明状态且鼠标可穿透点击下方页面
+ */
+const clickThrough = ref(false);
+
+/**
+ * 弹窗标题栏右侧按钮  
+ * 数组中从前到后对应UI中从右到左
+ */
+const rightBtns: {
+    show?: Ref<boolean>;
+    icon: Component;
+    title?: string;
+    active?: Ref<boolean>
+    callback: (e: PointerEvent) => any;
+}[] = [{
+    icon: MaterialSymbolsClose,
+    title: t($app.$buttons.$close),
+    callback: destroy,
+}, {
+    show: computed(() => seamless),
+    icon: MaterialSymbolsHighlightMouseCursor,
+    title: t($app.$buttons.$clickThrough),
+    active: clickThrough,
+    callback: _e => setClickThrough(),
+}];
+
+/**
  * 显示弹窗
  */
 function show() {
@@ -128,6 +168,15 @@ function toggle() {
 function destroy() {
     visible.value = false;
     host.remove();
+}
+
+/**
+ * 设置弹窗是否穿透
+ * @param val 是否穿透，省略或者null代表按照当前值取反
+ * @returns 设置后的穿透值
+ */
+function setClickThrough(val: boolean | null = null) {
+    return clickThrough.value = val === null ? !clickThrough.value : val;
 }
 // #endregion
 
@@ -228,6 +277,15 @@ defineExpose({
     content: body, buttons: btns,
 });
 // #endregion
+
+// #region 通用钩子事件
+function mainWindowMousedown(_e: MouseEvent) {
+    // 将host元素放到父元素最后，实现多个悬浮窗之间，最后点击的在最上方
+    const parent = host.parentElement;
+    if (parent && parent.lastChild !== host)
+        parent.append(host);
+}
+// #endregion
 </script>
 
 <template>
@@ -244,12 +302,16 @@ defineExpose({
                 border border-solid border-surface-300 dark:border-surface-700
                 shadow-sm shadow-gray-500 dark:shadow-black
             "
+            :class="{
+                'pointer-events-none': clickThrough,
+            }"
             :style="{
                 width: typeof width === 'number' ? `calc(var(--spacing) * ${ width })` : width,
                 height: typeof height === 'number' ? `calc(var(--spacing) * ${ height })` : height,
                 transform: transform,
                 zIndex: zIndex + 1,
             }"
+            @mousedown="mainWindowMousedown"
         >
             <!-- Header -->
             <div
@@ -260,43 +322,65 @@ defineExpose({
                     border-b border-solid border-surface-300 dark:border-surface-700
                     cursor-move
                     select-none
+                    pointer-events-auto
                 "
                 @mousedown="dragstart"
             >
-                <!-- 文字部分 -->
+                <!-- 左侧内容 -->
                 <div
                     class="
-                        flex flex-row justify-start items-center
+                        flex flex-row gap-3 justify-start items-center
                         grow shrink
                         px-5 py-3
                         font-bold
                     "
                 >
-                    {{ header }}
+                    <!-- 图标 -->
+                    <component v-if="icon" :is="icon" />
+
+                    <!-- 标题 -->
+                    <div>{{ header }}</div>
                 </div>
 
-                <!-- 关闭按钮 -->
+                <!-- 右侧按钮 -->
                 <div
                     class="
-                        absolute right-0 h-full aspect-square text-lg
-                        flex justify-center items-center
-                        bg-transparent text-surface-600 dark:text-surface-400 hover:text-surface-500 dark:hover:text-surface-300
-                        cursor-pointer
+                        flex flex-row-reverse h-full gap-2
                     "
-                    @mousedown.stop
-                    @click="destroy"
                 >
-                    <MaterialSymbolsClose />
+                    <template v-for="btn of rightBtns">
+                        <div
+                            v-if="!Object.hasOwn(btn, 'show') || btn.show"
+                            class="
+                                h-full aspect-square text-lg
+                                flex justify-center items-center
+                                bg-transparent
+                                cursor-pointer
+                            "
+                            :class="{
+                                'text-surface-600 dark:text-surface-400 hover:text-surface-500 dark:hover:text-surface-300': !Object.hasOwn(btn, 'active') || !btn.active!.value,
+                                'text-severity-primary': btn.active?.value,
+                            }"
+                            :title="btn.title"
+                            @mousedown.stop
+                            @click="btn.callback"
+                        >
+                            <component :is="btn.icon" />
+                        </div>
+                    </template>
                 </div>
             </div>
             
             <!-- Body -->
             <div
                 class="
-                    grow shrink
+                    grow shrink overflow-auto
                     bg-surface-100 dark:bg-surface-900
                     px-5 py-5
                 "
+                :class="{
+                    'pointer-events-none opacity-40': clickThrough,
+                }"
             >
                 <component ref="body" :is="content.comp" v-bind="content.props" />
             </div>
@@ -309,6 +393,9 @@ defineExpose({
                     border-t border-solid border-surface-300 dark:border-surface-700
                     px-5 py-3
                 "
+                :class="{
+                    'pointer-events-none opacity-40': clickThrough,
+                }"
             >
                 <Button
                     v-for="btn of buttons"

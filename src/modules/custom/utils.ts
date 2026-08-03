@@ -1,12 +1,27 @@
-import { Nullable } from "@/utils";
+import type { Nullable } from "@/utils";
+import { PixivNovelAPIResponse } from "../api/novel/types";
+
+/**
+ * 加载出错标志
+ */
+export const ErrorSymbol: unique symbol = Symbol('Error loading api data');
+
+export interface NovelData {
+    id: string;
+    loading: boolean;
+    promise: Promise<Nullable<PixivNovelAPIResponse>>;
+    error: boolean;
+    data: Nullable<PixivNovelAPIResponse>;
+}
 
 /**
  * 从一系列字符串名称中查找并返回它们的最长共同部分  
  * @param names 名称数组
  * @param minLen 最短长度要求，长度小于此数值的共同部分将被忽略；省略此参数时默认为0，即接受任意长度共同部分
+ * @param trim 是否去除首尾空格；默认为false；如果为true，则最短长度要求应用于去除空格后的字符串
  * @returns 最长共同部分（如果有）；null（如果没有找到）
  */
-export function inferCommonName(names: string[], minLen: number = 0): Nullable<string> {
+export function inferCommonName(names: string[], minLen: number = 0, trim: boolean = false): Nullable<string> {
     // 1. 边界条件：数组为空或长度为0，直接返回 null
     if (!names || names.length === 0) return null;
 
@@ -27,11 +42,14 @@ export function inferCommonName(names: string[], minLen: number = 0): Nullable<s
         for (let start = 0; start <= maxPossibleLen - len; start++) {
             const subStr = shortest.substring(start, start + len);
 
-            // 4. 验证这个子串是否在所有字符串中都存在
+            // 4. 子串去除前后缀空格后长度应当仍满足最短长度要求
+            if (trim && subStr.trim().length < minLen) continue;
+
+            // 5. 验证这个子串是否在所有字符串中都存在
             const isCommon = names.every(name => name.includes(subStr));
 
-            // 5. 因为是从最长开始找的，第一个找到的就是“最长公共子串”
-            if (isCommon) return subStr;
+            // 6. 因为是从最长开始找的，第一个找到的就是“最长公共子串”
+            if (isCommon) return trim ? subStr.trim() : subStr;
         }
     }
 

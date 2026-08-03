@@ -24,20 +24,36 @@ export default {
         confirm: 'Download all novels and series by this author?',
     },
     custom: {
-        download: 'Batch Download Novels',
+        download: 'Custom Download',
         input: {
-            header: 'Batch Download Novels',
-            content: 'Please enter the link or ID of the novel to download\nPress Enter, Space, or Comma after input to add to the list:',
-            novel: 'Enter Novel ID or Link',
-            filename: 'Filename',
-            'calc-filename': 'Generate',
-            buttons: {
-                ok: 'OK',
-                cancel: 'Cancel',
+            dialog: {
+                header: 'Custom Download',
+                buttons: {
+                    ok: 'OK',
+                    cancel: 'Cancel',
+                },
             },
+            input: {
+                label: 'Add Novel',
+                guide: 'Follow the prompts to enter. Press Enter/Space/Comma or the + button on the right to add to the list',
+                id: {
+                    label: 'Enter the link or ID of the novel to download\nAfter entering, press Enter, Space, or Comma to add it to the list',
+                    placeholder: 'Enter Novel ID or Link',
+                }
+            },
+            options: {
+                label: 'Download Options',
+                merge: 'Merge downloads into a single Epub file',
+                filename: 'Filename',
+            },
+            list: {
+                label: 'Novel List',
+            },
+            'calc-filename': 'Generate',
             invalid: {
                 common: 'Invalid input format',
                 duplicate: 'Already added',
+                'partial-duplicate': 'Some of the novels you entered have already been added. Only new novels will be added',
             },
             preview: {
                 error: 'Failed to load novel data',
@@ -45,7 +61,7 @@ export default {
             }
         },
         'novel-api-error': {
-            header: 'Batch Download Novels',
+            header: 'Merge Download Multiple Novels',
             content: 'Error fetching novel data:\nPlease check your input and network connection.',
         },
         'invalid-input': {
@@ -53,10 +69,6 @@ export default {
             content: 'Please check the input format.\nEnter the link or ID of the novel, press Enter or Space after input to add to the list.',
         },
         'fetching-data': 'Fetching novel data',
-        filename: {
-            header: 'Batch Download Novels',
-            content: 'Please enter the filename for the saved Epub:',
-        },
     },
     downloader: {
         epub: {
@@ -88,6 +100,12 @@ export default {
     },
     popup: {
         dialog: {
+            app: {
+                buttons: {
+                    'click-through': 'Click-through',
+                    close: 'Close',
+                }
+            },
             dialog: {
                 header: 'Default Title',
                 buttons: {

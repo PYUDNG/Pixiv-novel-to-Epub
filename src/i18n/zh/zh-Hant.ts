@@ -24,20 +24,36 @@ export default {
         confirm: '下載作者的全部小說和系列小說？',
     },
     custom: {
-        download: '合併下載多篇小說',
+        download: '自訂下載',
         input: {
-            header: '合併下載多篇小說',
-            content: '請輸入需要下載的小說的連結或ID\n輸入完畢後，使用 回車、空格或逗號 加入到列表',
-            novel: '輸入 小說ID 或 連結',
-            filename: '檔案名稱',
-            'calc-filename': '生成',
-            buttons: {
-                ok: '確定',
-                cancel: '取消',
+            dialog: {
+                header: '自訂下載',
+                buttons: {
+                    ok: '確定',
+                    cancel: '取消',
+                },
             },
+            input: {
+                label: '新增小說',
+                guide: '按照提示輸入，回車/空格/逗號/右側 + 按鈕 新增到列表',
+                id: {
+                    label: '請輸入需要下載的小說的連結或者ID\n輸入完畢後，使用 回車、空格或逗號 新增到列表',
+                    placeholder: '輸入 小說ID 或 連結',
+                }
+            },
+            options: {
+                label: '下載選項',
+                merge: '合併下載為一個Epub檔案',
+                filename: '檔案名稱',
+            },
+            list: {
+                label: '小說列表',
+            },
+            'calc-filename': '生成',
             invalid: {
                 common: '輸入格式錯誤',
-                duplicate: '已加入過此書',
+                duplicate: '已新增過此書',
+                'partial-duplicate': '您輸入的部分小說已新增過，僅會新增未新增過的小說',
             },
             preview: {
                 error: '小說資料載入失敗',
@@ -53,10 +69,6 @@ export default {
             content: '請檢查輸入格式是否正確\n輸入小說的連結或ID，輸入完畢後，使用 回車 或者 空格 加入到列表',
         },
         'fetching-data': '正在獲取小說資料',
-        filename: {
-            header: '合併下載多篇小說',
-            content: '請輸入儲存Epub的檔案名稱：',
-        },
     },
     downloader: {
         epub: {
@@ -88,6 +100,12 @@ export default {
     },
     popup: {
         dialog: {
+            app: {
+                buttons: {
+                    'click-through': '視窗穿透',
+                    close: '關閉',
+                }
+            },
             dialog: {
                 header: '預設標題',
                 buttons: {

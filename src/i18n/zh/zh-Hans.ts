@@ -24,20 +24,36 @@ export default {
         confirm: '下载作者的全部小说和系列小说？',
     },
     custom: {
-        download: '合并下载多篇小说',
+        download: '自定义下载',
         input: {
-            header: '合并下载多篇小说',
-            content: '请输入需要下载的小说的链接或者ID\n输入完毕后，使用 回车、空格或逗号 添加到列表',
-            novel: '输入 小说ID 或 链接',
-            filename: '文件名',
-            'calc-filename': '生成',
-            buttons: {
-                ok: '确定',
-                cancel: '取消',
+            dialog: {
+                header: '自定义下载',
+                buttons: {
+                    ok: '确定',
+                    cancel: '取消',
+                },
             },
+            input: {
+                label: '添加小说',
+                guide: '按照提示输入，回车/空格/逗号/右侧+按钮 添加到列表',
+                id: {
+                    label: '请输入需要下载的小说的链接或者ID\n输入完毕后，使用 回车、空格或逗号 添加到列表',
+                    placeholder: '输入 小说ID 或 链接',
+                }
+            },
+            options: {
+                label: '下载选项',
+                merge: '合并下载为一个Epub文件',
+                filename: '文件名',
+            },
+            list: {
+                label: '小说列表',
+            },
+            'calc-filename': '生成',
             invalid: {
                 common: '输入格式错误',
                 duplicate: '已添加过此书',
+                'partial-duplicate': '您输入的部分小说已添加过，仅添加未添加过的小说',
             },
             preview: {
                 error: '小说数据加载失败',
@@ -53,10 +69,6 @@ export default {
             content: '请检查输入格式是否正确\n输入小说的链接或者ID，输入完毕后，使用 回车 或者 空格 添加到列表',
         },
         'fetching-data': '正在获取小说数据',
-        filename: {
-            header: '合并下载多篇小说',
-            content: '请输入保存Epub的文件名：',
-        },
     },
     downloader: {
         epub: {
@@ -88,6 +100,12 @@ export default {
     },
     popup: {
         dialog: {
+            app: {
+                buttons: {
+                    'click-through': '窗口穿透',
+                    close: '关闭',
+                }
+            },
             dialog: {
                 header: '默认标题',
                 buttons: {

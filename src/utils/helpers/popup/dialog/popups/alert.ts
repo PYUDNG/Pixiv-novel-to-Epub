@@ -13,6 +13,9 @@ const DEFAULT_OPTIONS: Required<AlertOptions> = {
     dark: 'auto',
     header: t($dialog.$alert.$header),
     seamless: false,
+    icon: null,
+    width: 120,
+    height: 'fit-content',
     backdropDismiss: true,
 };
 

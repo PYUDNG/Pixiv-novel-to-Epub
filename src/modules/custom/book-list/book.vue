@@ -1,7 +1,7 @@
 <!-- 小说预览项目 -->
 <script setup lang="ts">
 import { Severity } from '@/components/types';
-import { Nullable } from '@/utils';
+import { extractText, Nullable } from '@/utils';
 import type { Component } from 'vue';
 import MaterialSymbolsDeleteOutline from '~icons/material-symbols/delete-outline';
 import MaterialSymbolsKeyboardArrowUp from '~icons/material-symbols/keyboard-arrow-up';
@@ -171,7 +171,7 @@ const buttons: ButtonDef[] = [{
                         grow shrink h-max
                         overflow-y-auto
                     "
-                    :title="desc"
+                    :title="extractText(desc)"
                     v-html="desc"
                 ></div>
             </div>
@@ -191,7 +191,7 @@ const buttons: ButtonDef[] = [{
                 :icon="button.icon"
                 :severity="button.severity"
                 :callback="button.callback"
-                dense
+                padding="p-0"
                 class="text-lg"
             />
         </div>

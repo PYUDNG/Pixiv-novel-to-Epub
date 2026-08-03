@@ -1,5 +1,5 @@
 import i18n, { i18nKeys } from "@/i18n/index.ts";
-import type { PromiseOrRaw, VueContent } from "../../../types/index.ts";
+import type { Nullable, PromiseOrRaw, VueContent } from "../../../types/index.ts";
 import { isSystemDark } from "../../ui-utils.ts";
 import App, { Button } from './app.vue';
 import { computed, isRef, reactive, watch } from "vue";
@@ -24,6 +24,12 @@ export interface DialogOptions {
     dark?: Ref<boolean> | boolean | 'auto';
 
     /**
+     * 标题图标
+     * @default null
+     */
+    icon?: Nullable<Component>;
+
+    /**
      * 标题文字
      * @default '默认标题' 或由具体对话框实现覆写的默认值
      */
@@ -42,15 +48,32 @@ export interface DialogOptions {
     backdropDismiss?: boolean;
 
     /**
+     * 对话框宽度  
+     * CSS字符串值，或者number*var(--spacing)
+     * @default 120
+     */
+    width?: string | number;
+
+    /**
+     * 对话框高度  
+     * CSS字符串值，或者number像素值
+     * @default 'fit-content'
+     */
+    height?: string | number;
+
+    /**
      * 对话框按钮列表
      */
     buttons: Button[];
 }
 const DEFAULT_OPTIONS: Required<DialogOptions> = {
+    icon: null,
     dark: 'auto',
     header: t($dialog.$dialog.$header),
     seamless: false,
     backdropDismiss: true,
+    width: 120,
+    height: 'fit-content',
     buttons: [],
 };
 
@@ -141,8 +164,11 @@ export async function createDialogApp<
             },
         },
         props: {
+            icon: fullOptions.icon,
             header: fullOptions.header,
             content: content,
+            width: fullOptions.width,
+            height: fullOptions.height,
             seamless: fullOptions.seamless,
             backdropDismiss: fullOptions.backdropDismiss,
             buttons: fullOptions.buttons,

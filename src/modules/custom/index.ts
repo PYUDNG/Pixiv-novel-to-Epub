@@ -1,19 +1,15 @@
 import i18n, { i18nKeys } from "@/i18n";
 import { defineModule } from "../types";
-import { AbortSymbol, alert, createVueContent, globalLogger, isPixivDark, Nullable } from "@/utils";
-import { downloadCustom, downloadWithUI } from "../downloader";
+import { createVueContent, isPixivDark, Nullable } from "@/utils";
+import { downloadMerged, downloadMultiple, downloadWithUI } from "../downloader";
 import { GM_registerMenuCommand, GM_unregisterMenuCommand } from "$";
-import { novel } from "../api";
-import { newTask, progress } from "@/utils/helpers/popup/progress";
-import MaterialSymbolsDataObject from '~icons/material-symbols/data-object';
 import { createDialogApp } from "@/utils/helpers/popup/dialog/dialog";
 import App from "./app.vue";
-
-const PROGRESS_UI_DESTROY_DELAY = 3000;
+import MaterialSymbolsDashboardCustomize from '~icons/material-symbols/dashboard-customize';
+import type { DownloadOptions } from "./download-options/download-options.vue";
 
 const { t } = i18n.global;
 const $custom = i18nKeys.$custom;
-const logger = globalLogger.withPath('custom');
 
 export default defineModule({
     id: 'custom',
@@ -23,7 +19,7 @@ export default defineModule({
             // 输入小说列表
             type CustomInput = Nullable<{
                 ids: string[];
-                filename: string;
+                options: DownloadOptions;
             }>;
             const { promise, resolve } = Promise.withResolvers<CustomInput>();
             const { instance } = await createDialogApp(
@@ -33,20 +29,23 @@ export default defineModule({
                     props: {},
                 }),
                 {
-                    header: t($custom.$input.$header),
+                    icon: MaterialSymbolsDashboardCustomize,
+                    header: t($custom.$input.$dialog.$header),
                     dark: isPixivDark,
                     seamless: true,
+                    width: '90vw',
+                    height: '90vh',
                     buttons: [{
-                        label: t($custom.$input.$buttons.$ok),
+                        label: t($custom.$input.$dialog.$buttons.$ok),
                         severity: 'primary',
                         callback: (): void => resolve(
                             instance ? {
-                                ids: instance.value,
-                                filename: instance.filename,
+                                ids: instance.ids,
+                                options: instance.options,
                             } : null
                         ),
                     }, {
-                        label: t($custom.$input.$buttons.$cancel),
+                        label: t($custom.$input.$dialog.$buttons.$cancel),
                         severity: 'secondary',
                         callback: (): void => resolve(null),
                     }]
@@ -54,45 +53,14 @@ export default defineModule({
             );
             const inputData = await promise;
             if (inputData === null) return;
-            const { ids, filename } = inputData;
+            const { ids, options } = inputData;
             if (ids.length === 0) return;
 
-            // 获取所有小说数据
-            let hasError = false;
-            const p = await progress([], {
-                dark: isPixivDark,
-                seamless: true,
-            });
-            const taskId = p.add(newTask(t($custom.$fetchingData), MaterialSymbolsDataObject, ids.length));
-            const ctrl = new AbortController();
-            const promises = ids.map(async id => {
-                try {
-                    const data = await novel(id, ctrl.signal);
-                    p.progress(taskId);
-                    return data;
-                } catch(err) {
-                    hasError = true;
-                    logger.simple('Error', 'custom download fetch novels data failed');
-                    logger.asLevel('Error', err);
-                    throw err;
-                }
-            });
-            Promise.all(promises)
-                .then(() => p.complete(taskId))
-                .finally(() => p.destroy(PROGRESS_UI_DESTROY_DELAY));
-            const novels = await Promise.all(promises).catch(err => err as never);
-
-            if (hasError) {
-                await alert(t($custom.$novelApiError.$content), {
-                    header: t($custom.$novelApiError.$header),
-                    backdropDismiss: false,
-                });
-                return;
-            };
-            if (novels.some(data => data === AbortSymbol)) return;
-
             // 执行下载
-            downloadWithUI(downloadCustom, ids, filename);
+            if (options.merge)
+                downloadWithUI(downloadMerged, ids, options.filename);
+            else
+                downloadWithUI(downloadMultiple, ids, []);
         });
     },
     leave() {

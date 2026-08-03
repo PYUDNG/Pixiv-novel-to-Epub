@@ -379,6 +379,25 @@ export async function* downloadAuthor(
     const seriesIds = index.body.novelSeries.map(data => data.id);
     
     // 下载小说和系列小说：使用队列进行并发控制以取得较好的进度反馈用户体验
+    yield* downloadMultiple(singleIds, seriesIds);
+
+    return true;
+}
+
+/**
+ * 下载多个Epub小说  
+ * 支持小说和系列小说两种下载任务
+ * @param novelIds 小说id列表
+ * @param seriesIds 小说系列id列表
+ * @param signal 下载终止信号
+ * @returns 下载成功true，下载被取消false，出错时直接抛出错误
+ */
+export async function* downloadMultiple(
+    novelIds: (string | number)[],
+    seriesIds: (string | number)[],
+    signal?: AbortSignal,
+): AsyncGenerator<AysncProgressYields<DownloadProgressType>, boolean, void> {
+    // 下载小说和系列小说：使用队列进行并发控制以取得较好的进度反馈用户体验
     yield* mergeAsyncGenerators<
         AysncProgressYields<DownloadProgressType>, boolean[], void
     >(
@@ -386,7 +405,7 @@ export async function* downloadAuthor(
         withProgressYields(
             async (complete, progress) => {
                 const queue = new Queue({ max: 5, sleep: 0 });
-                const promises = singleIds.map(id => queue.enqueue(async () => {
+                const promises = novelIds.map(id => queue.enqueue(async () => {
                     const generator = downloadNovel(id, signal);
                     const promise = asyncGenerator2Promise(generator);
                     promise.then(() => progress());
@@ -394,7 +413,7 @@ export async function* downloadAuthor(
                 }));
                 return complete(await Promise.all(promises))
             },
-            singleIds.length,
+            novelIds.length,
             'novel'
         ),
 
@@ -425,7 +444,7 @@ export async function* downloadAuthor(
  * @param signal 下载终止信号
  * @returns 下载成功true，下载被取消false，出错时直接抛出错误
  */
-export async function* downloadCustom(
+export async function* downloadMerged(
     ids: (string | number)[],
     filename?: string,
     signal?: AbortSignal,
