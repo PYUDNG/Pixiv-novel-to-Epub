@@ -7,14 +7,15 @@ import { ref, useTemplateRef, watch } from 'vue';
 import { AbortSymbol, deepEqual, SingleOrArray } from '@/utils';
 import Button from '@/components/button.vue';
 import MaterialSymbolsAdd from '~icons/material-symbols/add';
-import { series, seriesContent } from '@/modules/api';
+import { series, seriesContent, userProfileAll } from '@/modules/api';
 import { SeriesContentAPIPageItem } from '@/modules/api/novel/types';
 
 const REG_PURE_NUMBER = /^\d+$/;
 const REG_PATH_SERIES = /^\/novel\/series\/(\d+)$/;
+const REG_PATH_AUTHOR = /^\/users\/(\d+)(?:\/|$)/;
 
 const { t } = useI18n();
-const $custom = i18nKeys.$custom;
+const $link = i18nKeys.$custom.$input.$input.$link;
 
 // #region props
 const { novels }= defineProps<{
@@ -70,19 +71,24 @@ async function validate(val: string): Promise<true | string> {
     let valid = false;
 
     // 检查格式
-    // 小说ID
-    if (REG_PURE_NUMBER.test(val)) valid = true;
-    // 链接
-    if (/^https?:\/\//.test(val)) {
-        const url = new URL(val);
-        const search = url.searchParams;
-        // 单本
-        if (search.has('id') && REG_PURE_NUMBER.test(search.get('id')!))
-            valid = true;
-        // 系列
-        if (REG_PATH_SERIES.test(url.pathname))
-            valid = true;
-    }
+    if (!/^https?:\/\//.test(val))
+        return t($link.$invalidLink);
+    
+    // 解析链接类型
+    const url = new URL(val);
+    const search = url.searchParams;
+
+    // 单本
+    if (search.has('id') && REG_PURE_NUMBER.test(search.get('id')!))
+        valid = true;
+
+    // 系列
+    if (REG_PATH_SERIES.test(url.pathname))
+        valid = true;
+
+    // 作者
+    if (REG_PATH_AUTHOR.test(url.pathname))
+        valid = true;
 
     // 检查重复
     if (valid) {
@@ -90,15 +96,16 @@ async function validate(val: string): Promise<true | string> {
         if (Array.isArray(processed)) {
             // 解析结果为多本小说
             if (novels.some(novel => processed.some(p => novel.id === p)))
-                input.value!.setError(t($custom.$input.$invalid.$partialDuplicate));
+                input.value!.setError(t($link.$partialDuplicate));
+                return true;
         } else {
             // 解析结果为单本小说
             if (novels.some(novel => novel.id === processed))
-                return t($custom.$input.$invalid.$duplicate);
+                return t($link.$duplicate);
         }
     }
 
-    return valid || t($custom.$input.$invalid.$common);
+    return valid || t($link.$invalidLink);
 }
 
 /**
@@ -106,7 +113,6 @@ async function validate(val: string): Promise<true | string> {
  * @param val 字符串
  */
 async function preprocess(val: string): Promise<SingleOrArray<string>> {
-    if (REG_PURE_NUMBER.test(val)) return val;
     const url = new URL(val);
 
     // 小说
@@ -141,6 +147,14 @@ async function preprocess(val: string): Promise<SingleOrArray<string>> {
         );
     }
 
+    // 作者的全部小说
+    if (REG_PATH_AUTHOR.test(url.pathname)) {
+        const id = url.pathname.match(REG_PATH_AUTHOR)![1];
+        const list = await userProfileAll(id);
+        if (list === AbortSymbol) return [];
+        return Object.keys(list.body.novels);
+    }
+
     throw new Error('Invalid preprocess value');
 }
 // #endregion
@@ -155,7 +169,7 @@ async function preprocess(val: string): Promise<SingleOrArray<string>> {
             v-model="ids"
             ref="input"
             class="grow shrink"
-            :placeholder="t($custom.$input.$input.$id.$placeholder)"
+            :placeholder="t($link.$placeholder)"
             :code="['Enter', 'NumpadEnter', 'Space', 'Comma', 'NumpadComma']"
             :badge="false"
             :validate="validate"

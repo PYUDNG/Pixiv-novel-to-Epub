@@ -35,11 +35,24 @@ export default {
             },
             input: {
                 label: '新增小說',
-                guide: '按照提示輸入，回車/空格/逗號/右側 + 按鈕 新增到列表',
+                guide: '按照提示輸入，回車/空格/逗號/右側+按鈕 新增到列表',
                 id: {
-                    label: '請輸入需要下載的小說的連結或者ID\n輸入完畢後，使用 回車、空格或逗號 新增到列表',
-                    placeholder: '輸入 小說ID 或 連結',
-                }
+                    placeholder: '輸入ID，支援 小說/系列/作者',
+                    options: {
+                        novel: '小說',
+                        series: '系列小說',
+                        author: '作者的全部小說',
+                    },
+                    'invalid-id': 'ID格式錯誤',
+                    duplicate: '已新增過此書',
+                    'partial-duplicate': '您輸入的部分小說已新增過，僅會新增未新增過的小說',
+                },
+                link: {
+                    placeholder: '輸入連結，支援 小說/系列/作者',
+                    'invalid-link': '連結格式錯誤',
+                    duplicate: '已新增過此書',
+                    'partial-duplicate': '您輸入的部分小說已新增過，僅會新增未新增過的小說',
+                },
             },
             options: {
                 label: '下載選項',
@@ -50,11 +63,6 @@ export default {
                 label: '小說列表',
             },
             'calc-filename': '生成',
-            invalid: {
-                common: '輸入格式錯誤',
-                duplicate: '已新增過此書',
-                'partial-duplicate': '您輸入的部分小說已新增過，僅會新增未新增過的小說',
-            },
             preview: {
                 error: '小說資料載入失敗',
                 loading: '載入中...',
@@ -127,6 +135,13 @@ export default {
             },
             prompt: {
                 header: '請輸入',
+                buttons: {
+                    ok: '確定',
+                    cancel: '取消',
+                }
+            },
+            select: {
+                header: '請選擇',
                 buttons: {
                     ok: '確定',
                     cancel: '取消',

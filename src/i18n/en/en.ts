@@ -37,9 +37,22 @@ export default {
                 label: 'Add Novel',
                 guide: 'Follow the prompts to enter. Press Enter/Space/Comma or the + button on the right to add to the list',
                 id: {
-                    label: 'Enter the link or ID of the novel to download\nAfter entering, press Enter, Space, or Comma to add it to the list',
-                    placeholder: 'Enter Novel ID or Link',
-                }
+                    placeholder: 'Enter ID. Supports Novel / Series / Author',
+                    options: {
+                        novel: 'Novel',
+                        series: 'Series',
+                        author: 'All Novels by Author',
+                    },
+                    'invalid-id': 'Invalid ID format',
+                    duplicate: 'Already added',
+                    'partial-duplicate': 'Some of the novels you entered have already been added. Only new novels will be added',
+                },
+                link: {
+                    placeholder: 'Enter Link. Supports Novel / Series / Author',
+                    'invalid-link': 'Invalid link format',
+                    duplicate: 'Already added',
+                    'partial-duplicate': 'Some of the novels you entered have already been added. Only new novels will be added',
+                },
             },
             options: {
                 label: 'Download Options',
@@ -50,11 +63,6 @@ export default {
                 label: 'Novel List',
             },
             'calc-filename': 'Generate',
-            invalid: {
-                common: 'Invalid input format',
-                duplicate: 'Already added',
-                'partial-duplicate': 'Some of the novels you entered have already been added. Only new novels will be added',
-            },
             preview: {
                 error: 'Failed to load novel data',
                 loading: 'Loading...',
@@ -127,6 +135,13 @@ export default {
             },
             prompt: {
                 header: 'Please enter',
+                buttons: {
+                    ok: 'OK',
+                    cancel: 'Cancel',
+                }
+            },
+            select: {
+                header: 'Please select',
                 buttons: {
                     ok: 'OK',
                     cancel: 'Cancel',

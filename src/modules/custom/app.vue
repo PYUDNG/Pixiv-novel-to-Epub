@@ -8,7 +8,8 @@ import { inject, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { novel } from '../api/index.ts';
 import type { NovelData } from './utils.ts';
-import BookInput from './book-input/book-input.vue';
+import LinkInput from './book-input/link-input.vue';
+import IDInput from './book-input/id-input.vue';
 import BookList from './book-list/book-list.vue';
 import Area from '@/components/area.vue';
 import DownloadOptions, { type DownloadOptions as IDownloadOptions } from './download-options/download-options.vue';
@@ -120,7 +121,8 @@ function load(id: string) {
 
 // #region 输入组件逻辑
 const inputComps = [
-    BookInput,
+    LinkInput,
+    IDInput,
 ]
 
 /**
@@ -166,7 +168,7 @@ defineExpose({ ids, options });
         "
     >
         <!-- 左侧输入区域 -->
-        <div class="flex flex-1 flex-col justify-between items-stretch gap-5">
+        <div class="flex flex-col justify-between items-stretch gap-5 basis-1/2 min-w-0">
             <!-- 上方小说添加方式 -->
             <Area
                 :label="t($custom.$input.$input.$label)"
@@ -194,7 +196,7 @@ defineExpose({ ids, options });
             :label="t($custom.$input.$list.$label)"
             :bg-color="isPixivDark ? 'var(--color-surface-900)' : 'var(--color-surface-100)'"
             color="color-mix(in srgb, currentcolor 50%, transparent)"
-            class="flex-1 w-full h-full"
+            class="w-full h-full basis-1/2 min-w-0"
         >
             <BookList
                 :novels="novels"

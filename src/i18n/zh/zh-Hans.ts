@@ -37,9 +37,22 @@ export default {
                 label: '添加小说',
                 guide: '按照提示输入，回车/空格/逗号/右侧+按钮 添加到列表',
                 id: {
-                    label: '请输入需要下载的小说的链接或者ID\n输入完毕后，使用 回车、空格或逗号 添加到列表',
-                    placeholder: '输入 小说ID 或 链接',
-                }
+                    placeholder: '输入ID，支持 小说/系列/作者',
+                    options: {
+                        novel: '小说',
+                        series: '系列小说',
+                        author: '作者的全部小说',
+                    },
+                    'invalid-id': 'ID格式错误',
+                    duplicate: '已添加过此书',
+                    'partial-duplicate': '您输入的部分小说已添加过，仅添加未添加过的小说',
+                },
+                link: {
+                    placeholder: '输入链接，支持 小说/系列/作者',
+                    'invalid-link': '链接格式错误',
+                    duplicate: '已添加过此书',
+                    'partial-duplicate': '您输入的部分小说已添加过，仅添加未添加过的小说',
+                },
             },
             options: {
                 label: '下载选项',
@@ -50,11 +63,6 @@ export default {
                 label: '小说列表',
             },
             'calc-filename': '生成',
-            invalid: {
-                common: '输入格式错误',
-                duplicate: '已添加过此书',
-                'partial-duplicate': '您输入的部分小说已添加过，仅添加未添加过的小说',
-            },
             preview: {
                 error: '小说数据加载失败',
                 loading: '加载中...',
@@ -127,6 +135,13 @@ export default {
             },
             prompt: {
                 header: '请输入',
+                buttons: {
+                    ok: '确定',
+                    cancel: '取消',
+                }
+            },
+            select: {
+                header: '请选择',
                 buttons: {
                     ok: '确定',
                     cancel: '取消',
