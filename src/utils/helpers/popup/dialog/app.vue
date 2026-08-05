@@ -317,7 +317,7 @@ function mainWindowMousedown(_e: MouseEvent) {
             <div
                 class="
                     relative
-                    flex flex-row justify-between items-center
+                    flex flex-row justify-between items-stretch
                     bg-surface-200 dark:bg-surface-800
                     border-b border-solid border-surface-300 dark:border-surface-700
                     cursor-move
@@ -345,14 +345,14 @@ function mainWindowMousedown(_e: MouseEvent) {
                 <!-- 右侧按钮 -->
                 <div
                     class="
-                        flex flex-row-reverse h-full gap-2
+                        flex flex-row-reverse gap-2
                     "
                 >
                     <template v-for="btn of rightBtns">
                         <div
-                            v-if="!Object.hasOwn(btn, 'show') || btn.show"
+                            v-if="!Object.hasOwn(btn, 'show') || btn.show!.value"
                             class="
-                                h-full aspect-square text-lg
+                                aspect-square text-lg
                                 flex justify-center items-center
                                 bg-transparent
                                 cursor-pointer
