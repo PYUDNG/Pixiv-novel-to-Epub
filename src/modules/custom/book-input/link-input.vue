@@ -7,12 +7,13 @@ import { ref, useTemplateRef, watch } from 'vue';
 import { AbortSymbol, deepEqual, SingleOrArray } from '@/utils';
 import Button from '@/components/button.vue';
 import MaterialSymbolsAdd from '~icons/material-symbols/add';
-import { series, seriesContent, userProfileAll } from '@/modules/api';
-import { SeriesContentAPIPageItem } from '@/modules/api/novel/types';
+import { userProfileAll } from '@/modules/api';
+import { getSeriesNovels, getUserNovelBookmarks } from './utils';
 
 const REG_PURE_NUMBER = /^\d+$/;
 const REG_PATH_SERIES = /^\/novel\/series\/(\d+)$/;
-const REG_PATH_AUTHOR = /^\/users\/(\d+)(?:\/|$)/;
+const REG_PATH_AUTHOR = /^\/users\/(\d+)\/?$/;
+const REG_PATH_FAVORITE = /^\/users\/(\d+)\/bookmarks\/novels$/;
 
 const { t } = useI18n();
 const $link = i18nKeys.$custom.$input.$input.$link;
@@ -90,6 +91,10 @@ async function validate(val: string): Promise<true | string> {
     if (REG_PATH_AUTHOR.test(url.pathname))
         valid = true;
 
+    // 收藏
+    if (REG_PATH_FAVORITE.test(url.pathname))
+        valid = true;
+
     // 检查重复
     if (valid) {
         const processed = await preprocess(val);
@@ -123,28 +128,9 @@ async function preprocess(val: string): Promise<SingleOrArray<string>> {
     if (REG_PATH_SERIES.test(url.pathname)) {
         const seriesId = url.pathname.match(REG_PATH_SERIES)![1];
 
-        // 系列数据
-        const info = await series(seriesId);
-        if (info === AbortSymbol) return [];
-
-        // 系列目录
-        const promises: Promise<typeof AbortSymbol | SeriesContentAPIPageItem[]>[] = [];
-        for (let i = 0; i < info.body.publishedContentCount; i += 30) {
-            const promise = (async () => {
-                const d = await seriesContent(seriesId, 30, i, undefined);
-                if (d === AbortSymbol) return AbortSymbol;
-                return d.body.page.seriesContents;
-            }) ();
-            promises.push(promise);
-        }
-        const results = await Promise.all(promises);
-        if (results.some(val => val === AbortSymbol)) return [];
-        return (results as SeriesContentAPIPageItem[][]).reduce<string[]>(
-            (ids, items) => {
-                ids.push(...items.map(item => item.id));
-                return ids;
-            }, []
-        );
+        const list = await getSeriesNovels(seriesId);
+        if (list === AbortSymbol) return [];
+        return list;
     }
 
     // 作者的全部小说
@@ -153,6 +139,15 @@ async function preprocess(val: string): Promise<SingleOrArray<string>> {
         const list = await userProfileAll(id);
         if (list === AbortSymbol) return [];
         return Object.keys(list.body.novels);
+    }
+
+    // 用户收藏的小说
+    if (REG_PATH_FAVORITE.test(url.pathname)) {
+        const id = url.pathname.match(REG_PATH_FAVORITE)![1];
+        const visibility = url.searchParams.get('rest') === 'hide' ? 'private' : 'public';
+        const list = await getUserNovelBookmarks(id, visibility);
+        if (list === AbortSymbol) return [];
+        return list;
     }
 
     throw new Error('Invalid preprocess value');

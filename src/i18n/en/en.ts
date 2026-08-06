@@ -37,18 +37,20 @@ export default {
                 label: 'Add Novel',
                 guide: 'Follow the prompts to enter. Press Enter/Space/Comma or the + button on the right to add to the list',
                 id: {
-                    placeholder: 'Enter ID. Supports Novel / Series / Author',
+                    placeholder: 'Enter ID. Supports Novel / Series / Author / Favorites',
                     options: {
                         novel: 'Novel',
                         series: 'Series',
                         author: 'All Novels by Author',
+                        'favorite:public': "User's Public Favorites",
+                        'favorite:private': "User's Private Favorites",
                     },
                     'invalid-id': 'Invalid ID format',
                     duplicate: 'Already added',
                     'partial-duplicate': 'Some of the novels you entered have already been added. Only new novels will be added',
                 },
                 link: {
-                    placeholder: 'Enter Link. Supports Novel / Series / Author',
+                    placeholder: 'Enter Link. Supports Novel / Series / Author / Favorites',
                     'invalid-link': 'Invalid link format',
                     duplicate: 'Already added',
                     'partial-duplicate': 'Some of the novels you entered have already been added. Only new novels will be added',
@@ -60,7 +62,7 @@ export default {
                 filename: 'Filename',
             },
             list: {
-                label: 'Novel List',
+                label: 'Novel List ({total})',
             },
             'calc-filename': 'Generate',
             preview: {

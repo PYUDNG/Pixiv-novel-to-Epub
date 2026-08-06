@@ -37,18 +37,20 @@ export default {
                 label: '添加小说',
                 guide: '按照提示输入，回车/空格/逗号/右侧+按钮 添加到列表',
                 id: {
-                    placeholder: '输入ID，支持 小说/系列/作者',
+                    placeholder: '输入ID，支持 小说/系列/作者/收藏',
                     options: {
                         novel: '小说',
                         series: '系列小说',
                         author: '作者的全部小说',
+                        'favorite:public': '用户的公开收藏',
+                        'favorite:private': '用户的非公开收藏',
                     },
                     'invalid-id': 'ID格式错误',
                     duplicate: '已添加过此书',
                     'partial-duplicate': '您输入的部分小说已添加过，仅添加未添加过的小说',
                 },
                 link: {
-                    placeholder: '输入链接，支持 小说/系列/作者',
+                    placeholder: '输入链接，支持 小说/系列/作者/收藏',
                     'invalid-link': '链接格式错误',
                     duplicate: '已添加过此书',
                     'partial-duplicate': '您输入的部分小说已添加过，仅添加未添加过的小说',
@@ -60,7 +62,7 @@ export default {
                 filename: '文件名',
             },
             list: {
-                label: '小说列表',
+                label: '小说列表 ({total})',
             },
             'calc-filename': '生成',
             preview: {

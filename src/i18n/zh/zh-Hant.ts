@@ -37,18 +37,20 @@ export default {
                 label: '新增小說',
                 guide: '按照提示輸入，回車/空格/逗號/右側+按鈕 新增到列表',
                 id: {
-                    placeholder: '輸入ID，支援 小說/系列/作者',
+                    placeholder: '輸入ID，支援 小說/系列/作者/收藏',
                     options: {
                         novel: '小說',
                         series: '系列小說',
                         author: '作者的全部小說',
+                        'favorite:public': '使用者的公開收藏',
+                        'favorite:private': '使用者的非公開收藏',
                     },
                     'invalid-id': 'ID格式錯誤',
                     duplicate: '已新增過此書',
                     'partial-duplicate': '您輸入的部分小說已新增過，僅會新增未新增過的小說',
                 },
                 link: {
-                    placeholder: '輸入連結，支援 小說/系列/作者',
+                    placeholder: '輸入連結，支援 小說/系列/作者/收藏',
                     'invalid-link': '連結格式錯誤',
                     duplicate: '已新增過此書',
                     'partial-duplicate': '您輸入的部分小說已新增過，僅會新增未新增過的小說',
@@ -60,7 +62,7 @@ export default {
                 filename: '檔案名稱',
             },
             list: {
-                label: '小說列表',
+                label: '小說列表 ({total})',
             },
             'calc-filename': '生成',
             preview: {

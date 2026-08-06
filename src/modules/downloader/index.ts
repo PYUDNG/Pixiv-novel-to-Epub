@@ -15,7 +15,7 @@ import type { Component } from "vue";
 import { AysncProgressYields, toEpubHTML, tojEpubLang, withProgressYields } from "./utils";
 import { GM_info } from "$";
 import { SeriesContentAPIPageItem } from "../api/novel/types";
-import { PixivUserProfileNovelsAPIResponse, UserProfileNovelsWork } from "../api/profile/types";
+import { PixivUserProfileNovelsAPIResponse, UserProfileNovelsWork } from "../api/user/types";
 
 const PROGRESS_UI_DESTROY_DELAY = 3000;
 

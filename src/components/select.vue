@@ -1,8 +1,8 @@
 <!-- 下拉选择框 -->
 <script setup generic="V" lang="ts">
 import { monkeyWindow } from '$';
-import { globalLogger } from '@/utils';
-import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { globalLogger, OVERLAY_CONTAINER_KEY } from '@/utils';
+import { computed, inject, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 import MaterialSymbolsKeyboardArrowDown from '~icons/material-symbols/keyboard-arrow-down';
 import MaterialSymbolsKeyboardArrowUp from '~icons/material-symbols/keyboard-arrow-up';
 
@@ -35,6 +35,10 @@ if (options.length === 0)
     throw new TypeError('there should be at least 1 option in options prop');
 if (options.every(opt => opt.value !== selected.value))
     throw new TypeError('option with given model value not found');
+// #endregion
+
+// #region provide/inject
+const container = inject(OVERLAY_CONTAINER_KEY)!;
 // #endregion
 
 // #region 选中数据
@@ -74,14 +78,14 @@ const dropdownVisible = ref<boolean>(false);
 const ctrl = new AbortController();
 const root = useTemplateRef('root');
 onMounted(() => {
-    monkeyWindow.addEventListener('click', e => {
+    const onClick = (e: Event) => {
         if (!root.value) return;
         const clickingSelectComp = e.composedPath().includes(root.value);
         if (clickingSelectComp) return;
         toggle(false);
-    }, {
-        signal: ctrl.signal,
-    });
+    };
+    [monkeyWindow, container].forEach(target => 
+        target.addEventListener('click', onClick, { signal: ctrl.signal, capture: true }));
 });
 onUnmounted(() => ctrl.abort());
 
@@ -124,11 +128,11 @@ function toggle(visible?: boolean) {
         <div
             v-show="dropdownVisible"
             class="
-                absolute top-full left-0
+                absolute top-full -left-px
                 flex flex-col justify-start items-stretch
                 text-surface-800 dark:text-surface-200
                 border border-solid border-surface-300 dark:border-surface-700
-                w-max min-w-15 max-h-30 overflow-y-auto
+                w-max min-w-[calc(100%+2px)] max-h-30 overflow-y-auto
                 select-none
             "
         >
@@ -136,7 +140,7 @@ function toggle(visible?: boolean) {
                 v-for="option of options"
                 class="
                     flex flex-row justify-start items-center
-                    p-1
+                    p-2
                     hover:bg-[rgba(0,0,0,0.2)] dark:hover:bg-[rgba(255,255,255,0.1)]
                 "
                 @click="select(option.value)"

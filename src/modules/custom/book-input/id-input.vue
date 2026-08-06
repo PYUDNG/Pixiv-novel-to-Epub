@@ -9,7 +9,7 @@ import Button from '@/components/button.vue';
 import MaterialSymbolsAdd from '~icons/material-symbols/add';
 import { userProfileAll } from '@/modules/api';
 import Select, { SelectOption } from '@/components/select.vue';
-import { getSeriesNovels } from './utils';
+import { getSeriesNovels, getUserNovelBookmarks } from './utils';
 
 const REG_PURE_NUMBER = /^\d+$/;
 
@@ -30,10 +30,15 @@ const emit = defineEmits<{
 // #endregion
 
 // #region Select数据
-type IDType = 'novel' | 'series' | 'author'; // | 'favorite';
+type IDType = 'novel' | 'series' | 'author' | 'favorite:public' | 'favorite:private';
+type SplitColon<T extends string> = 
+  T extends `${infer M}:${infer S}` 
+    ? [M, S] 
+    : [T, undefined];
+const splitType = <T extends string>(type: T) => type.split(':') as SplitColon<T>;
 const type = ref<IDType>('novel');
 const options: SelectOption<IDType>[] =
-    (['novel', 'series', 'author'] as const).map(
+    (['novel', 'series', 'author', 'favorite:public', 'favorite:private'] as const satisfies IDType[]).map(
         type => ({
             label: t(`${ $id.$options }.${ type }`),
             value: type,
@@ -105,7 +110,8 @@ async function validate(val: string): Promise<true | string> {
  */
 async function preprocess(val: string): Promise<SingleOrArray<string>> {
     // 根据类型解析ID列表
-    switch (type.value) {
+    const [mainType, subType] = splitType(type.value);
+    switch (mainType) {
         // 小说
         case 'novel': return val;
 
@@ -122,9 +128,18 @@ async function preprocess(val: string): Promise<SingleOrArray<string>> {
             if (list === AbortSymbol) return [];
             return Object.keys(list.body.novels);
         }
-    }
 
-    throw new Error('Invalid preprocess value');
+        // 用户收藏
+        case 'favorite': {
+            const list = await getUserNovelBookmarks(val, subType);
+            if (list === AbortSymbol) return [];
+            return list;
+        }
+
+        default: {
+            throw new Error('Invalid preprocess value');
+        }
+    }
 }
 // #endregion
 </script>

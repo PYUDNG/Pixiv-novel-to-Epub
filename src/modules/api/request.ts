@@ -73,7 +73,7 @@ async function _api<
     T = JsonValue,
 >(
     pathname: string,
-    params: Record<string, string> = {},
+    params: Record<string, JsonValue | undefined> = {},
     signal?: AbortSignal,
 ): Promise<T> {
     const url = toAbsURL(pathname, params);
@@ -136,10 +136,19 @@ export function clearCache() {
     cache.clear();
 }
 
-function toAbsURL(pathname: string, params: Record<string, string>) {
+function toAbsURL(pathname: string, params: Record<string, JsonValue | undefined>) {
     return new URL(pathname, PIXIV_API_BASEURL).href + (params ? `?${toSearch(params)}` : '');
 }
 
-function toSearch(params: Record<string, string>) {
-    return new URLSearchParams(params).toString();
+function toSearch(params: Record<string, JsonValue | undefined>) {
+    const obj: Record<string, string> = {};
+    for (const [key, val] of Object.entries(params)) {
+        if (typeof val === 'undefined') continue;
+        if (typeof val === 'string')
+            obj[key] = val;
+        else
+            obj[key] = val === null ?
+                'null' : val.toString();
+    }
+    return new URLSearchParams(obj).toString();
 }

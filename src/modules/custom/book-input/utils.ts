@@ -1,11 +1,12 @@
-import { series, seriesContent } from "@/modules/api";
+import { series, seriesContent, userNovelsBookmarks } from "@/modules/api";
 import { SeriesContentAPIPageItem } from "@/modules/api/novel/types";
+import { UserNovelsBookmarksWork } from "@/modules/api/user/types";
 import { AbortSymbol } from "@/utils";
 
 /**
  * 获取系列小说的全部章节id数组
  * @param id 系列ID
- * @returns 
+ * @returns 系列小说id数组
  */
 export async function getSeriesNovels(
     id: string | number,
@@ -32,4 +33,27 @@ export async function getSeriesNovels(
             return ids;
         }, []
     );
+}
+
+/**
+ * 获取用户收藏小说id数组
+ * @param id 用户ID
+ * @param visibility 公开收藏 / 非公开收藏
+ * @returns 收藏小说id数组
+ */
+export async function getUserNovelBookmarks(
+    id: string | number,
+    visibility: 'public' | 'private',
+): Promise<string[] | typeof AbortSymbol> {
+    const works: UserNovelsBookmarksWork[] = [];
+    for (let offset = 0;;) {
+        const rest = visibility === 'public' ? 'show' : 'hide';
+        const page = await userNovelsBookmarks(id, {
+            offset, rest,
+        });
+        if (page === AbortSymbol) return [];
+        works.push(...page.body.works);
+        if (works.length >= page.body.total) break;
+    }
+    return works.map(work => work.id);
 }

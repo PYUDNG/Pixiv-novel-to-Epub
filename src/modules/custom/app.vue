@@ -193,7 +193,7 @@ defineExpose({ ids, options });
 
         <!-- 右侧书单 -->
         <Area
-            :label="t($custom.$input.$list.$label)"
+            :label="t($custom.$input.$list.$label, { total: novels.length })"
             :bg-color="isPixivDark ? 'var(--color-surface-900)' : 'var(--color-surface-100)'"
             color="color-mix(in srgb, currentcolor 50%, transparent)"
             class="w-full h-full basis-1/2 min-w-0"
