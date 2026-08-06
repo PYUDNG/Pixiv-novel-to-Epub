@@ -4,7 +4,7 @@
 
 <!-- /condition -->
 
-一个 Tampermonkey / Violentmonkey 用户脚本，可在 [Pixiv](https://www.pixiv.net) 小说页面上一键下载 EPUB 格式电子书。支持单本下载、系列合集下载，以及自定义多本小说合并下载。
+一个 Tampermonkey / Violentmonkey 用户脚本，可在 [Pixiv](https://www.pixiv.net) 小说页面上一键下载 EPUB 格式电子书。支持单本下载、系列合集下载、作者全部作品一键下载，以及自定义多本小说合并下载（支持收藏小说批量添加）。
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Vue 3](https://img.shields.io/badge/Vue-3-42b883?logo=vue.js)](https://vuejs.org/)
@@ -26,9 +26,11 @@
 - 自动生成完整目录
 
 ### ✂️ 自定义合集
-- 通过脚本菜单手动输入多篇小说 ID
-- 支持直接输入数字 ID 或粘贴完整链接
-- 合并下载为一本 EPUB，自定义文件名
+- 通过脚本菜单打开自定义下载面板，左侧输入、右侧书单实时预览
+- ID 输入支持类型选择：小说 / 系列 / 作者全部小说 / 用户公开收藏 / 用户非公开收藏
+- 链接输入自动识别：小说页 / 系列页 / 作者主页 / 用户收藏页（自动区分公开与非公开收藏）
+- 书单支持排序、移除、重新加载，并标注小说数量
+- 支持两种下载方式：每本小说单独下载为一个 EPUB，或合并为一本 EPUB（文件名自动推断，可手动编辑或一键重新计算）
 
 ### 👤 作者全部作品下载
 - 在 Pixiv 用户主页通过脚本菜单一键下载作者全部小说
@@ -92,8 +94,8 @@ npm run build:deps && npm run build:raw
 ```
 
 6. **自动化AI翻译README**
-- 创建`scripts/readme-builder/openai.config.ts`（可参考同目录的`openai.config.d.ts`和`openai.congig.ts.template`），填写自己的AI API配置
-- 修改`README.src.md`，使用你熟悉的语言编写README，并支持使用 `<!-- condition:xxx -->` 语法进行条件渲染，具体格式可以参照项目内已有的`README.src.md`
+- 创建`scripts/readme-builder/openai.config.ts`（可参考同目录的`openai.config.d.ts`和`openai.config.ts.template`），填写自己的AI API配置
+- 修改`README.src.md`，使用你熟悉的语言编写README，并支持通过条件渲染标记控制内容在不同平台和语言下的显示（具体语法请参照`README.src.md`中已有的标记示例）
 - 运行以下代码自动化翻译和渲染所有语言和平台的README
 ```bash
 npm run build:readme
@@ -112,11 +114,20 @@ npm run build:readme
 pixiv-novel-to-epub/
 ├── src/
 │   ├── components/         # UI 组件
-│   │   ├── download-button.vue   # 下载按钮
-│   │   └── content-renderer.vue  # 内容渲染组件
-│   ├── i18n/               # 国际化（中/英）
+│   │   ├── area.vue                # 分组区域容器
+│   │   ├── button.vue              # 按钮组件
+│   │   ├── download-button.vue     # 下载按钮
+│   │   ├── content-renderer.vue    # 内容渲染组件
+│   │   ├── select.vue              # 下拉选择器
+│   │   ├── toggle.vue              # 开关组件
+│   │   └── multi-input/            # 多文本输入组件
+│   │       ├── multi-input.vue
+│   │       └── text-tag.vue
+│   ├── i18n/               # 国际化（简中/繁中/英）
 │   ├── modules/            # 功能模块
 │   │   ├── api/            # Pixiv API 请求层（含缓存与队列）
+│   │   │   ├── novel/      # 小说/系列接口
+│   │   │   └── user/       # 用户资料、收藏接口
 │   │   ├── novel/          # 单本小说下载页面模块
 │   │   ├── series/         # 系列下载页面模块
 │   │   ├── author/         # 作者主页下载模块
@@ -228,10 +239,12 @@ commit 消息示例：
 ### ✂️ 自定义合集下载
 1. 在任意 Pixiv 页面，点击 Tampermonkey 菜单中的脚本名称
 2. 选择 **自定义下载**
-3. 在弹出的对话框中输入小说 ID（每行一个，或以逗号分隔）
-4. 为合并文件指定一个名称，开始下载
+3. 在左侧输入区添加小说：输入 ID 时可通过下拉框选择类型（小说 / 系列 / 作者全部小说 / 用户公开收藏 / 用户非公开收藏）；粘贴链接时会自动识别小说页、系列页、作者主页、收藏页
+4. 在右侧书单中预览已添加的小说，可排序、移除或重新加载
+5. 在下载选项中选择下载方式：默认每本小说单独下载为一个 EPUB；如需合并为一本 EPUB，打开合并开关并确认文件名（支持自动推断与手动编辑）
+6. 点击确认，开始下载
 
-> **提示：** 你可以在对话框中粘贴 Pixiv 小说链接，脚本会自动提取其中的 ID。
+> **提示：** 输入框支持粘贴 Pixiv 小说链接，脚本会自动提取其中的 ID；收藏页链接可通过 `?rest=hide` 区分公开与非公开收藏。
 
 ### 👤 下载作者全部作品
 1. 打开任意 Pixiv 用户主页（`pixiv.net/users/xxx`）

@@ -2,7 +2,7 @@
 
 [English](/readme/README.en.md) [简体中文](/readme/README.zh-Hans.md) [繁體中文](/readme/README.zh-Hant.md)
 
-一個 Tampermonkey / Violentmonkey 使用者腳本，可在 [Pixiv](https://www.pixiv.net) 小說頁面上一鍵下載 EPUB 格式電子書。支援單本下載、系列合集下載，以及自訂多本小說合併下載。
+一個 Tampermonkey / Violentmonkey 使用者腳本，可在 [Pixiv](https://www.pixiv.net) 小說頁面上一鍵下載 EPUB 格式電子書。支援單本下載、系列合集下載、作者全部作品一鍵下載，以及自訂多本小說合併下載（支援收藏小說批次新增）。
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Vue 3](https://img.shields.io/badge/Vue-3-42b883?logo=vue.js)](https://vuejs.org/)
@@ -15,23 +15,25 @@
 
 ### 📖 單本下載
 - 在 Pixiv 單篇小說頁面點擊按鈕，一鍵下載為 EPUB 檔案
-- 自動獲取標題、作者、標籤、封面等元資料
-- 內容中的圖片自動嵌入EPUB
+- 自動取得標題、作者、標籤、封面等中繼資料
+- 內容中的圖片自動嵌入 EPUB
 
 ### 📚 系列合集
 - 在 Pixiv 小說系列頁面下載整個系列，合併為一本 EPUB
-- 系列封面和全部內容自動包含在內
-- 自動生成完整目錄
+- 系列封面與全部內容自動包含在內
+- 自動產生完整目錄
 
 ### ✂️ 自訂合集
-- 透過腳本選單手動輸入多篇小說 ID
-- 支援直接輸入數字 ID 或貼上完整連結
-- 合併下載為一本 EPUB，自訂檔案名稱
+- 透過腳本選單開啟自訂下載面板，左側輸入、右側書單即時預覽
+- ID 輸入支援類型選擇：小說 / 系列 / 作者全部小說 / 使用者公開收藏 / 使用者非公開收藏
+- 連結輸入自動辨識：小說頁 / 系列頁 / 作者主頁 / 使用者收藏頁（自動區分公開與非公開收藏）
+- 書單支援排序、移除、重新載入，並標註小說數量
+- 支援兩種下載方式：每本小說單獨下載為一個 EPUB，或合併為一本 EPUB（檔名自動推斷，可手動編輯或一鍵重新計算）
 
 ### 👤 作者全部作品下載
 - 在 Pixiv 使用者主頁透過腳本選單一鍵下載作者全部小說
 - 單篇小說每篇獨立一個 EPUB，系列作品合併為一個 EPUB
-- 自動獲取作品索引，並發下載，高效快捷
+- 自動取得作品索引，並發下載，快速高效
 
 ### 🎨 智慧深色模式
 - 自動跟隨 Pixiv 頁面主題切換
@@ -39,9 +41,9 @@
 
 ### 🌐 國際化
 - 介面支援簡體中文、繁體中文、英文
-- 自動匹配瀏覽器語言設定
+- 自動比對瀏覽器語言設定
 
-### ⏳ 進度反饋
+### ⏳ 進度回饋
 - 即時顯示下載進度，每個步驟清晰可見
 - 支援隨時中斷下載過程
 - 智慧快取 Pixiv API 回應，減少重複請求
@@ -62,13 +64,13 @@
 
 #### 開發環境設定
 
-1. **克隆專案**
+1. **複製專案**
 ```bash
 git clone https://github.com/PYUDNG/pixiv-novel-to-epub.git
 cd pixiv-novel-to-epub
 ```
 
-2. **安裝依賴**
+2. **安裝相依套件**
 ```bash
 npm install
 ```
@@ -83,48 +85,60 @@ npm run dev
 npm run build
 ```
 
-5. **如無需程式碼壓縮和美化，可以使用以下命令建置**
+5. **如無需程式碼壓縮和美化，可以使用以下指令建置**
 ```bash
 npm run build:deps && npm run build:raw
 ```
 
-6. **自動化AI翻譯README**
-- 建立`scripts/readme-builder/openai.config.ts`（可參考同目錄的`openai.config.d.ts`和`openai.congig.ts.template`），填寫自己的AI API配置
-- 修改`README.src.md`，使用您熟悉的語言編寫README，並支援使用 `<!-- condition:xxx -->` 語法進行條件渲染，具體格式可以參照專案內已有的`README.src.md`
-- 執行以下程式碼自動化翻譯和渲染所有語言和平台的README
+6. **自動化 AI 翻譯 README**
+- 建立 `scripts/readme-builder/openai.config.ts`（可參考同目錄的 `openai.config.d.ts` 和 `openai.config.ts.template`），填寫自己的 AI API 設定
+- 修改 `README.src.md`，使用您熟悉的語言編寫 README，並支援透過條件渲染標記控制內容在不同平台和語言下的顯示（具體語法請參照 `README.src.md` 中已有的標記範例）
+- 執行以下指令自動化翻譯和渲染所有語言和平台的 README
 ```bash
 npm run build:readme
 ```
+
 #### 安裝使用者腳本
 
-建置完成後，會在專案 `/dist/` 目錄生成 `.user.js` 檔案，可以透過以下步驟安裝：
+建置完成後，會在專案 `/dist/` 目錄產生 `.user.js` 檔案，可以透過以下步驟安裝：
 - 開啟任一建置產物，複製其中全部程式碼內容
 - 安裝 Tampermonkey 或 Violentmonkey 瀏覽器擴充功能
-- 在擴充功能管理器中點擊"新增新腳本"
-- 貼上建置生成的使用者腳本內容## 📁 專案結構
+- 在擴充功能管理員中點擊「新增腳本」
+- 貼上建置產生的使用者腳本內容
+
+## 📁 專案結構
 
 ```
 pixiv-novel-to-epub/
 ├── src/
 │   ├── components/         # UI 元件
-│   │   ├── download-button.vue   # 下載按鈕
-│   │   └── content-renderer.vue  # 內容渲染元件
-│   ├── i18n/               # 國際化（中/英）
+│   │   ├── area.vue                # 分組區域容器
+│   │   ├── button.vue              # 按鈕元件
+│   │   ├── download-button.vue     # 下載按鈕
+│   │   ├── content-renderer.vue    # 內容渲染元件
+│   │   ├── select.vue              # 下拉選取器
+│   │   ├── toggle.vue              # 開關元件
+│   │   └── multi-input/            # 多文字輸入元件
+│   │       ├── multi-input.vue
+│   │       └── text-tag.vue
+│   ├── i18n/               # 國際化（簡中/繁中/英）
 │   ├── modules/            # 功能模組
 │   │   ├── api/            # Pixiv API 請求層（含快取與佇列）
+│   │   │   ├── novel/      # 小說/系列介面
+│   │   │   └── user/       # 使用者資料、收藏介面
 │   │   ├── novel/          # 單本小說下載頁面模組
 │   │   ├── series/         # 系列下載頁面模組
 │   │   ├── author/         # 作者主頁下載模組
 │   │   ├── custom/         # 自訂合集下載模組
-│   │   └── downloader/     # 下載引擎（EPUB 生成、進度管理）
+│   │   └── downloader/     # 下載引擎（EPUB 產生、進度管理）
 │   ├── utils/              # 工具函式
 │   │   └── helpers/        # DOM 操作、網路請求、UI 狀態等
-│   ├── main.ts             # 應用程式進入點
+│   ├── main.ts             # 應用程式入口
 │   └── loader.ts           # 模組載入器
 ├── scripts/                # 建置腳本
 │   ├── readme-builder/     # README 多語言建置工具
 │   ├── post-compress.js    # 後壓縮處理腳本
-│   └── userscript-meta.js  # Userscript 元資料解析工具
+│   └── userscript-meta.js  # Userscript 中繼資料解析工具
 ├── package.json
 ├── vite.config.ts
 └── tsconfig.json
@@ -135,7 +149,7 @@ pixiv-novel-to-epub/
 - **前端框架**: Vue 3 + TypeScript
 - **建置工具**: Vite + vite-plugin-monkey
 - **樣式方案**: TailwindCSS v4
-- **EPUB 生成**: jEpub
+- **EPUB 產生**: jEpub
 - **國際化**: vue-i18n
 - **圖示**: Material Symbols（透過 unplugin-icons）
 - **工具庫**: mitt, uuid, dedent
@@ -159,7 +173,7 @@ npm run build
 您可以透過提交 Issue 和 Pull Request 參與到本專案中
 
 ### 提交 Issue
-- 描述清晰的問題或功能需求
+- 清楚描述問題或功能需求
 - 提供重現步驟
 - 包含相關截圖或日誌
 
@@ -167,31 +181,31 @@ npm run build
 1. Fork 專案倉庫
 2. 建立功能分支
 3. 提交程式碼變更
-4. 撰寫清晰的提交資訊
+4. 編寫清晰的提交訊息
 5. 建立 Pull Request
 
 ### PR 規範
 #### 程式碼規範
-本專案沒有硬性的程式碼規範要求，但是請您確保您的程式碼至少能做到：
+本專案沒有硬性的程式碼規範要求，但請您確保您的程式碼至少能做到：
 - 保留有合適的註解
 - 通過 TypeScript 型別檢查
 
 #### Commit 規範
-每條 commit 中可以包含多個更新內容，每個更新內容應當寫成一條列表項
-每條更新內容應當在列表項開頭處標明更新類型，並用英文冒號+空格（`: `）隔開：
+每條 commit 中可以包含多個更新內容，每個更新內容應寫成一條清單項目
+每條更新內容應在清單項目開頭處標明更新類型，並用英文冒號+空格（`: `）隔開：
 | 更新類型       | 描述                                                 |
 | :------------- | :--------------------------------------------------- |
 | `feat`         | 新功能新增                                           |
 | `improvement`  | 既有功能改進                                         |
-| `code`         | 功能無變化，僅程式碼（包含註解）修改（程式碼最佳化等）     |
+| `code`         | 功能無變化，僅程式碼（包含註解）修改（程式碼最佳化等） |
 | `performance`  | 功能無變化，僅效能改進                               |
 | `bug fix`      | 修復 bug                                             |
-| `i18n`         | 程式碼無變化，僅更新語言包                             |
-| `maintenance`  | 程式碼無變化的其他更新，如：TODO 列表更新，依賴更新等等 |
-| `refactor`     | 功能無變化，程式碼整體重寫（重構）                     |
+| `i18n`         | 程式碼無變化，僅更新語言套件                         |
+| `maintenance`  | 程式碼無變化的其他更新，如：TODO 清單更新、依賴更新等等 |
+| `refactor`     | 功能無變化，程式碼整體重寫（重構）                   |
 
 如果一條更新對應多個類型，以其最主要的類型書寫
-commit 訊息應當用英文（或者繁體中文）書寫
+commit 訊息應使用英文（或簡體中文）書寫
 
 commit 訊息範例：
 ```
@@ -201,15 +215,17 @@ commit 訊息範例：
 - maintenance: updated README
 ```
 
-以上 commit 訊息僅作範例。實際 commit 中，對於如此多的更新內容，應當盡量分多次 commit 提交
+以上 commit 訊息僅作範例。實際 commit 中，對於如此多的更新內容，應盡量分多次 commit 提交
 
-## 📄 授權條款
+## 📄 授權
 
-本專案採用 [GPL-3.0](https://spdx.org/licenses/GPL-3.0-or-later.html) 授權條款。## 🎯 使用方式
+本專案採用 [GPL-3.0](https://spdx.org/licenses/GPL-3.0-or-later.html) 授權。
+
+## 🎯 使用方法
 
 ### 📖 下載單篇小說
 1. 開啟任意 Pixiv 小說頁面（`pixiv.net/novel/show.php?id=xxx`）
-2. 在作者資訊欄旁會看到 **下載按鈕**
+2. 在作者資訊欄旁邊會看到 **下載按鈕**
 3. 點擊按鈕，腳本將自動取得小說內容並產生 EPUB 檔案
 
 ### 📚 下載系列合集
@@ -220,10 +236,12 @@ commit 訊息範例：
 ### ✂️ 自訂合集下載
 1. 在任意 Pixiv 頁面，點擊 Tampermonkey 選單中的腳本名稱
 2. 選擇 **自訂下載**
-3. 在彈出的對話框中輸入小說 ID（每行一個，或以逗號分隔）
-4. 為合併檔案指定一個名稱，開始下載
+3. 在左側輸入區新增小說：輸入 ID 時可透過下拉選單選擇類型（小說 / 系列 / 作者全部小說 / 使用者公開收藏 / 使用者非公開收藏）；貼上連結時會自動辨識小說頁、系列頁、作者主頁、收藏頁
+4. 在右側書單中預覽已新增的小說，可排序、移除或重新載入
+5. 在下載選項中選擇下載方式：預設每本小說單獨下載為一個 EPUB；如需合併為一本 EPUB，開啟合併開關並確認檔名（支援自動推斷與手動編輯）
+6. 點擊確認，開始下載
 
-> **提示：** 你可以在對話框中貼上 Pixiv 小說連結，腳本會自動提取其中的 ID。
+> **提示：** 輸入框支援貼上 Pixiv 小說連結，腳本會自動從中取出 ID；收藏頁連結可透過 `?rest=hide` 區分公開與非公開收藏。
 
 ### 👤 下載作者全部作品
 1. 開啟任意 Pixiv 使用者主頁（`pixiv.net/users/xxx`）
@@ -233,14 +251,14 @@ commit 訊息範例：
 
 ## 🙏 致謝
 
-- [vite-plugin-monkey](https://github.com/lisonge/vite-plugin-monkey) - 用於建構使用者腳本的 Vite 插件
-- [jEpub](https://github.com/lelinhtinh/jepub) - EPUB 檔案生成函式庫
+- [vite-plugin-monkey](https://github.com/lisonge/vite-plugin-monkey) - 用於建置使用者腳本的 Vite 外掛
+- [jEpub](https://github.com/lelinhtinh/jepub) - EPUB 檔案產生函式庫
 - [Vue.js](https://vuejs.org/) - 漸進式 JavaScript 框架
 - [TailwindCSS](https://tailwindcss.com/) - 實用優先的 CSS 框架
-- [Vite](https://vitejs.dev/) - 下一代前端建構工具
-- [Tampermonkey](https://www.tampermonkey.net/) - 流行的使用者腳本管理器
-- [Violentmonkey](https://violentmonkey.github.io/) - 開源的使用者腳本管理器
+- [Vite](https://vitejs.dev/) - 次世代前端建置工具
+- [Tampermonkey](https://www.tampermonkey.net/) - 熱門的使用者腳本管理器
+- [Violentmonkey](https://violentmonkey.github.io/) - 開放原始碼的使用者腳本管理器
 
 ---
 
-**注意**: 本專案僅供學習與研究使用，請遵守 Pixiv 的相關使用條款與版權規定。
+**注意**: 本專案僅供學習和研究使用，請遵守 Pixiv 的相關使用條款與版權規定。
