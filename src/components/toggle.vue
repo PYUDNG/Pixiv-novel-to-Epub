@@ -169,7 +169,7 @@ defineExpose({
     role="switch"
     :aria-checked="isActive"
     :aria-disabled="disabled"
-    tabindex="disabled ? -1 : 0"
+    :tabindex="disabled ? '-1' : '0'"
     @click="handleToggleClick"
     @keydown="handleKeydown"
   >

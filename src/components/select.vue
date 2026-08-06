@@ -111,6 +111,7 @@ function toggle(visible?: boolean) {
             focus-visible:outline-none focus-visible:border-primary-400
             p-2 overflow-visible
         "
+        :title="label"
         @click="toggle()"
     >
         <!-- 显示当前选中项的值对应的标签文本 -->
