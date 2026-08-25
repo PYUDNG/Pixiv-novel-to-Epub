@@ -141,6 +141,8 @@ export class URLChangeMonitor {
             const oldUrl = window.location.href;
             // 执行原生pushState（真正修改URL）
             _this.originalPushState.apply(this, [state, title, url]);
+            // 忽略url未发生变化的调用
+            if (!url || oldUrl === new URL(url.toString(), location.href).href) return;
             // 触发URL变更事件
             _this.triggerUrlChange('pushState', oldUrl, url?.toString() || oldUrl, state);
         };
@@ -154,6 +156,7 @@ export class URLChangeMonitor {
         history.replaceState = function (this: History, state: any, title: string, url?: string | URL) {
             const oldUrl = window.location.href;
             _this.originalReplaceState.apply(this, [state, title, url]);
+            if (!url || oldUrl === new URL(url.toString(), location.href).href) return;
             _this.triggerUrlChange('replaceState', oldUrl, url?.toString() || oldUrl, state);
         };
     }
