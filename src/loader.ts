@@ -31,15 +31,24 @@ async function onUrlChange() {
         // 进入页面
         if (!activeState[module.default.id] && moduleActive) {
             logger.simple('Detail', `loader: enter ${ module.default.id }`);
-            module.default.enter?.();
-            module.default.toggle?.();
+            await module.default.enter?.();
+            await module.default.toggle?.();
         }
 
         // 离开页面
         if (activeState[module.default.id] && !moduleActive) {
             logger.simple('Detail', `loader: leave ${ module.default.id }`);
-            module.default.leave?.();
-            module.default.toggle?.();
+            await module.default.leave?.();
+            await module.default.toggle?.();
+        }
+
+        // 保持激活状态，切换了url
+        if (activeState[module.default.id] && moduleActive) {
+            logger.simple('Detail', `loader: update ${ module.default.id }`);
+            await module.default.leave?.();
+            await module.default.toggle?.();
+            await module.default.enter?.();
+            await module.default.toggle?.();
         }
 
         // 记录激活状态

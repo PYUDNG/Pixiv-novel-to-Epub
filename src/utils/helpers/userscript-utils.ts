@@ -1,7 +1,7 @@
 import { GM_addValueChangeListener, GM_deleteValue, GM_getValue, GM_listValues, GM_setValue, GmValueListenerId } from "$";
 import { ref, watch } from "vue";
 import { detectDom, type HintedString } from "..";
-import { globalLogger } from "./js-utils"
+import { deepEqual, globalLogger } from "./js-utils"
 
 const logger = globalLogger.withPath('userscript-utils');
 
@@ -249,7 +249,6 @@ export class UserscriptStorage<D extends Record<string, any>> {
                             newVal[subKey] :
                             Object.hasOwn(storage.defaultValues, subKey) ? storage.defaultValues[subKey] : undefined;
                         // 当更新前后值未改变时无需callback
-                        const deepEqual = (await import('./js-utils.js')).deepEqual;
                         if (deepEqual(oldSubVal, newSubVal)) return;
                         // 确定存储空间值存在且监听值发生了改变，回调
                         callback(subKey, oldSubVal, newSubVal, remote);

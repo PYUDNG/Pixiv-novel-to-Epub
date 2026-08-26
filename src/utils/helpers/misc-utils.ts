@@ -1,5 +1,6 @@
 import mitt, { Emitter } from 'mitt';
 import { $CrE } from './dom-utils';
+import { unsafeWindow } from '$';
 
 export function getSearchParam(name: string, url?: string): string | null {
     url = url ?? location.href;
@@ -136,7 +137,7 @@ export class URLChangeMonitor {
      */
     private hookPushState(): void {
         const _this = this;
-        history.pushState = function (this: History, state: any, title: string, url?: string | URL) {
+        unsafeWindow.history.pushState = function (this: History, state: any, title: string, url?: string | URL) {
             // 保存变更前的URL
             const oldUrl = window.location.href;
             // 执行原生pushState（真正修改URL）
@@ -153,7 +154,7 @@ export class URLChangeMonitor {
      */
     private hookReplaceState(): void {
         const _this = this;
-        history.replaceState = function (this: History, state: any, title: string, url?: string | URL) {
+        unsafeWindow.history.replaceState = function (this: History, state: any, title: string, url?: string | URL) {
             const oldUrl = window.location.href;
             _this.originalReplaceState.apply(this, [state, title, url]);
             if (!url || oldUrl === new URL(url.toString(), location.href).href) return;

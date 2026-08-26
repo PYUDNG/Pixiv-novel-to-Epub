@@ -6,18 +6,24 @@ interface DetectDomOptions<E extends HTMLElement = HTMLElement> {
     selector?: string | string[];
     attributes?: boolean;
     callback?: (element: E) => void;
+    /**
+     * 外部终止信号：abort 时断开观察（Promise 模式下同时以 AbortError 拒绝）
+     * 用于模块卸载等场景下主动终止在途的 detectDom
+     */
+    signal?: AbortSignal;
 }
 
 /**
  * 检测DOM元素出现
  * @overload
  * @param selector - 选择器
+ * @param options - 终止选项，目前支持 { signal: AbortSignal }：abort 时断开观察并以 AbortError 拒绝
  * @returns Promise<HTMLElement>
  */
 /**
  * 检测DOM元素出现
  * @overload
- * @param options - 检测选项
+ * @param options - 检测选项（含可选 signal）
  * @returns MutationObserver
  */
 /**
@@ -27,9 +33,10 @@ interface DetectDomOptions<E extends HTMLElement = HTMLElement> {
  * @param selectors - 选择器
  * @param attributes - 是否观察属性变化
  * @param callback - 回调函数
+ * @param signal - 外部终止信号（可选）
  * @returns MutationObserver
  */
-export function detectDom(selector: string | string[]): Promise<HTMLElement>;
+export function detectDom(selector: string | string[], options?: { signal?: AbortSignal }): Promise<HTMLElement>;
 export function detectDom<E extends HTMLElement>(options: DetectDomOptions<E>): MutationObserver;
 export function detectDom(
     root: Node,
@@ -37,15 +44,17 @@ export function detectDom(
     attributes?: boolean,
     callback?: (element: HTMLElement) => void,
     /** @internal */
-    __promiseMode?: boolean
+    __promiseMode?: boolean,
+    signal?: AbortSignal
 ): MutationObserver;
 export function detectDom(
     rootOrSelectorOrOptions: Node | string | string[] | DetectDomOptions,
-    selectors?: string | string[],
+    selectors?: string | string[] | { signal?: AbortSignal },
     attributes?: boolean,
     callback?: (element: HTMLElement) => void,
     /** @internal Promise 模式内部标记 */
-    __promiseMode?: boolean
+    __promiseMode?: boolean,
+    signal?: AbortSignal
 ): MutationObserver | Promise<HTMLElement> {
     // 解析参数
     let config: {
@@ -57,16 +66,20 @@ export function detectDom(
         processedElements: WeakSet<HTMLElement>;
         /** 是否为 Promise 模式（首次匹配即断开） */
         promiseMode: boolean;
+        /** 外部终止信号 */
+        signal?: AbortSignal;
     };
 
     if (rootOrSelectorOrOptions instanceof Node) {
-        // 处理 (root, selectors?, attributes?, callback?) 形式
+        // 处理 (root, selectors?, attributes?, callback?, signal?) 形式
+        const sel = selectors as string | string[] | undefined;
         config = {
-            selectors: Array.isArray(selectors) ? selectors : [selectors || ''],
+            selectors: Array.isArray(sel) ? sel : [sel || ''],
             root: rootOrSelectorOrOptions,
             attributes: attributes || false,            callback: callback || null,
             processedElements: new WeakSet(),
-            promiseMode: __promiseMode || false
+            promiseMode: __promiseMode || false,
+            signal,
         };
     } else if (typeof rootOrSelectorOrOptions === 'object' && !(rootOrSelectorOrOptions instanceof Node)) {
         // 处理 options 形式
@@ -76,12 +89,28 @@ export function detectDom(
             root: options.root || document,
             attributes: options.attributes || false,            callback: options.callback || null,
             processedElements: new WeakSet(),
-            promiseMode: false
+            promiseMode: false,
+            signal: options.signal,
         };
     } else {
-        // 处理 selector 形式 (返回Promise)
-        const selector = rootOrSelectorOrOptions as string | string[];        return new Promise(resolve => {
-            detectDom(document, selector, false, resolve, true);
+        // 处理 selector 形式 (返回Promise)，第二参数为可选的终止选项 { signal }
+        const selector = rootOrSelectorOrOptions as string | string[];
+        const signal = (selectors as { signal?: AbortSignal } | undefined)?.signal;
+        return new Promise<HTMLElement>((resolve, reject) => {
+            let observer: MutationObserver | null = null;
+            const onAbort = () => {
+                observer?.disconnect();
+                reject(new DOMException('The operation was aborted.', 'AbortError'));
+            };
+            const cleanup = () => signal?.removeEventListener('abort', onAbort);
+            if (signal) {
+                if (signal.aborted) { onAbort(); return; }
+                signal.addEventListener('abort', onAbort, { once: true });
+            }
+            observer = detectDom(document, selector, false, elm => {
+                cleanup();
+                resolve(elm);
+            }, true) as unknown as MutationObserver;
         });
     }
 
@@ -144,6 +173,13 @@ export function detectDom(
         subtree: true,
         attributes: config.attributes,
     });
+
+    // 支持外部终止：signal abort 时断开观察（Promise 模式的 reject 由 selector 形式的调用方处理）
+    if (config.signal) {
+        const onAbort = () => observer.disconnect();
+        config.signal.addEventListener('abort', onAbort, { once: true });
+        if (config.signal.aborted) observer.disconnect();
+    }
 
     return observer;
 }

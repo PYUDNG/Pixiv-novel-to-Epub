@@ -3,6 +3,7 @@ import type { Component } from 'vue';
 import type { ComponentExposed, ComponentProps } from 'vue-component-type-helpers';
 import { $CrE, CreateElementOptions, detectDom } from "./dom-utils";
 import i18n from '@/i18n/index.js';
+import * as styling from '@/styling.js';
 import { Nullable } from "../types";
 
 // #region 类型定义与默认值
@@ -83,9 +84,6 @@ export const OVERLAY_SHADOWHOST_KEY: InjectionKey<HTMLElement> = Symbol('overlay
 export const TRANSITION_DURATION_KEY: InjectionKey<number> = Symbol('transition-duration');
 // #endregion
 
-// 异步导入styling，防止循环导入初始化死锁
-let styling = import('@/styling.js');
-
 /**
  * 挂载Shadowroot，并在其中创建Vue App
  * @param hostId 
@@ -109,7 +107,7 @@ export async function createShadowApp<
     
     // 挂载Shadow DOM
     const shadow = hostElm.attachShadow(init);
-    styling.then(styling => styling.styling.applyTo(shadow));
+    styling.styling.applyTo(shadow);
 
     // 在Shadow DOM中创建vue挂载元素
     const appElm = $CrE('div', options.options?.app ?? {});
