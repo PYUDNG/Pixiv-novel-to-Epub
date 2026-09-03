@@ -82,13 +82,19 @@ export interface DialogButtonController {
      * 禁用按钮
      * @param index 第几个按钮（从0开始）
      */
-    disable(index: number): void;
+    disable(index: number, reason?: string): void;
     
     /**
      * 启用按钮
      * @param index 第几个按钮（从0开始）
      */
     enable(index: number): void;
+    
+    /**
+     * 查询按钮启用状态
+     * @param index 第几个按钮（从0开始）
+     */
+    isEnabled(index: number): boolean | string;
 
     /**
      * 设置加载状态
@@ -126,11 +132,14 @@ export async function createDialogApp<
 
     // provides
     const buttons: DialogButtonController = {
-        disable(index) {
-            fullOptions.buttons[index].disabled = true;
+        disable(index, reason) {
+            fullOptions.buttons[index].disabled = reason ?? true;
         },
         enable(index) {
             fullOptions.buttons[index].disabled = false;
+        },
+        isEnabled(index) {
+            return fullOptions.buttons[index].disabled ?? false;
         },
         loading(index, loading) {
             fullOptions.buttons[index].loading = loading;

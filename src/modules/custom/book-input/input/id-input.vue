@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { i18nKeys } from '@/i18n';
 import { useI18n } from 'vue-i18n';
-import { NovelData } from '../utils';
+import { NovelData } from '../../utils';
 import MultiInput from '@/components/multi-input/multi-input.vue';
 import { ref, useTemplateRef, watch } from 'vue';
 import { AbortSymbol, deepEqual, SingleOrArray } from '@/utils';
@@ -9,7 +9,7 @@ import Button from '@/components/button.vue';
 import MaterialSymbolsAdd from '~icons/material-symbols/add';
 import { userProfileAll } from '@/modules/api';
 import Select, { SelectOption } from '@/components/select.vue';
-import { getSeriesNovels, getUserNovelBookmarks } from './utils';
+import { getSeriesNovels, getUserNovelBookmarks } from '../utils';
 
 const REG_PURE_NUMBER = /^\d+$/;
 

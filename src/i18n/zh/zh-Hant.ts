@@ -32,6 +32,10 @@ export default {
                     ok: '確定',
                     cancel: '取消',
                 },
+                disable: {
+                    'no-novels': '請先新增一些小說再下載',
+                    'filter-mode': '請先退出篩選模式再下載',
+                }
             },
             input: {
                 label: '新增小說',
@@ -63,12 +67,27 @@ export default {
             },
             list: {
                 label: '小說列表 ({total})',
+                'label-filter': '篩選模式 ({preserved}/{total})',
+                filter: {
+                    'include-title': '書名包含',
+                    'exclude-title': '書名不含',
+                    'include-tag': '含有標籤',
+                    'exclude-tag': '不含標籤',
+                    favorite: {
+                        label: '收藏狀態',
+                        include: '已收藏',
+                        exclude: '未收藏',
+                    },
+                },
+                preview: {
+                    error: '小說資料載入失敗',
+                    loading: '載入中...',
+                },
+                empty: '書單是空的，先在左側新增一些小說吧',
+                'no-filter': '請先新增一些篩選條件',
+                'filter-not-loaded': '有 {count} 本小說尚未載入完成，請等待載入完畢後再提交篩選結果',
             },
             'calc-filename': '生成',
-            preview: {
-                error: '小說資料載入失敗',
-                loading: '載入中...',
-            }
         },
         'novel-api-error': {
             header: '合併下載多篇小說',

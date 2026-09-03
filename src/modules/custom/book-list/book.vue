@@ -9,7 +9,7 @@ import MaterialSymbolsKeyboardArrowDown from '~icons/material-symbols/keyboard-a
 import Button from '@/components/button.vue';
 
 // #region props
-const { id } = defineProps<{
+const { id, movable } = defineProps<{
     /**
      * 小说ID
      */
@@ -59,6 +59,11 @@ const { id } = defineProps<{
          */
         avatar: Nullable<string>;
     };
+
+    /**
+     * 是否允许移动位置
+     */
+    movable: boolean;
 }>();
 // #endregion
 
@@ -77,11 +82,13 @@ const emit = defineEmits<{
 interface ButtonDef {
     icon: Component;
     severity: Severity;
+    disabled?: boolean;
     callback: (this: HTMLElement, e: PointerEvent) => void;
 }
 const buttons: ButtonDef[] = [{
     icon: MaterialSymbolsKeyboardArrowUp,
     severity: 'normal',
+    disabled: !movable,
     callback: () => emit('forward', id),
 }, {
     icon: MaterialSymbolsDeleteOutline,
@@ -90,6 +97,7 @@ const buttons: ButtonDef[] = [{
 }, {
     icon: MaterialSymbolsKeyboardArrowDown,
     severity: 'normal',
+    disabled: !movable,
     callback: () => emit('backward', id),
 }];
 // #endregion
@@ -191,6 +199,7 @@ const buttons: ButtonDef[] = [{
                 :icon="button.icon"
                 :severity="button.severity"
                 :callback="button.callback"
+                :disabled="button.disabled === true"
                 padding="p-0"
                 class="text-lg"
             />

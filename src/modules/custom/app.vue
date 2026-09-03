@@ -1,21 +1,19 @@
 <!-- 自定义下载对话框内容 -->
 
 <script setup lang="ts">
-import { i18nKeys } from '@/i18n';
-import { AbortSymbol, isPixivDark, SingleOrArray } from '@/utils';
+import { AbortSymbol, SingleOrArray } from '@/utils';
 import { BUTTON_CONTROLLER_KEY } from '@/utils/helpers/popup/dialog/dialog';
 import { inject, reactive, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { novel } from '../api/index.ts';
 import type { NovelData } from './utils.ts';
-import LinkInput from './book-input/link-input.vue';
-import IDInput from './book-input/id-input.vue';
 import BookList from './book-list/book-list.vue';
-import Area from '@/components/area.vue';
 import DownloadOptions, { type DownloadOptions as IDownloadOptions } from './download-options/download-options.vue';
+import BookInput from './book-input/book-input.vue';
+import { useI18n } from 'vue-i18n';
+import { i18nKeys } from '@/i18n/utils.ts';
 
 const { t } = useI18n();
-const $custom = i18nKeys.$custom;
+const $dialog = i18nKeys.$custom.$input.$dialog;
 
 // #region props
 const {} = defineProps<{}>();
@@ -120,11 +118,6 @@ function load(id: string) {
 // #endregion
 
 // #region 输入组件逻辑
-const inputComps = [
-    LinkInput,
-    IDInput,
-]
-
 /**
  * 输入组件`add`事件处理器  
  * 将输入组件的新增值添加到`ids`数组中
@@ -138,11 +131,32 @@ function onAdd(newIds: SingleOrArray<string>) {
 // #endregion
 
 // #region 对话框按钮逻辑
+/**
+ * 禁用状态注册表  
+ * 记录了app自身及所有子组件对下载对话框「确定」按钮的禁用状态
+ */
+const disableStatus = ref<Record<
+    'app' | 'bookList',
+    boolean | string
+>>({
+    app: false,
+    bookList: false,
+});
+
+// 监听注册表数据，实时更新按钮禁用状态
+watch(disableStatus, status => {
+    const disabled = Object.values(status).some(val => val !== false);
+    const reasons = Object.values(status).filter(val => typeof val === 'string');
+    disabled ? buttons.disable(0, reasons.length ? reasons.join('\n') : undefined) : buttons.enable(0);
+}, { deep: true, immediate: true });
+
 // 当没有内容时禁用确定按钮
 watch(ids, ids => {
     const empty = ids.length === 0;
-    empty ? buttons.disable(0) : buttons.enable(0);
+    disableStatus.value.app = empty ? t($dialog.$disable.$noNovels) : false;
 }, { immediate: true, deep: true });
+
+// 根据子组件的请求禁用
 // #endregion
 
 // #region 下载选项
@@ -170,40 +184,20 @@ defineExpose({ ids, options });
         <!-- 左侧输入区域 -->
         <div class="flex flex-col justify-between items-stretch gap-5 basis-1/2 min-w-0">
             <!-- 上方小说添加方式 -->
-            <Area
-                :label="t($custom.$input.$input.$label)"
-                :bg-color="isPixivDark ? 'var(--color-surface-900)' : 'var(--color-surface-100)'"
-                color="color-mix(in srgb, currentcolor 50%, transparent)"
-                class="grow shrink"
-            >
-                <div class="flex flex-col gap-5 items-stretch">
-                    <div>{{ t($custom.$input.$input.$guide) }}</div>
-                    <component
-                        v-for="comp of inputComps"
-                        :is="comp"
-                        :novels="novels"
-                        @add="onAdd"
-                    />
-                </div>
-            </Area>
+            <BookInput :novels="novels" @add="onAdd" />
             
             <!-- 底部下载选项 -->
             <DownloadOptions v-model="options" :novels="novels" />
         </div>
 
         <!-- 右侧书单 -->
-        <Area
-            :label="t($custom.$input.$list.$label, { total: novels.length })"
-            :bg-color="isPixivDark ? 'var(--color-surface-900)' : 'var(--color-surface-100)'"
-            color="color-mix(in srgb, currentcolor 50%, transparent)"
-            class="w-full h-full basis-1/2 min-w-0"
-        >
-            <BookList
-                :novels="novels"
-                @remove="id => ids.splice(ids.indexOf(id), 1)"
-                @sort="sorted => ids = sorted"
-                @reload="id => load(id)"
-            />
-        </Area>
+        <BookList
+            :novels="novels"
+            @remove="id => ids.splice(ids.indexOf(id), 1)"
+            @update="newIds => ids = newIds"
+            @reload="id => load(id)"
+            @disable-download="reason => disableStatus.bookList = reason"
+            @enable-download="disableStatus.bookList = false"
+        />
     </div>
 </template>

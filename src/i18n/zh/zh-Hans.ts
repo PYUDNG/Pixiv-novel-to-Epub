@@ -32,6 +32,10 @@ export default {
                     ok: '确定',
                     cancel: '取消',
                 },
+                disable: {
+                    'no-novels': '请先添加一些小说再下载',
+                    'filter-mode': '请先退出筛选模式再下载',
+                }
             },
             input: {
                 label: '添加小说',
@@ -63,12 +67,27 @@ export default {
             },
             list: {
                 label: '小说列表 ({total})',
+                'label-filter': '筛选模式 ({preserved}/{total})',
+                filter: {
+                    'include-title': '书名包含',
+                    'exclude-title': '书名不含',
+                    'include-tag': '含有标签',
+                    'exclude-tag': '不含标签',
+                    favorite: {
+                        label: '收藏状态',
+                        include: '已收藏',
+                        exclude: '未收藏',
+                    },
+                },
+                preview: {
+                    error: '小说数据加载失败',
+                    loading: '加载中...',
+                },
+                empty: '书单是空的，先在左侧添加一些小说吧',
+                'no-filter': '请先添加一些筛选条件',
+                'filter-not-loaded': '有 {count} 本小说尚未加载完成，请等待加载完毕后再提交筛选结果',
             },
             'calc-filename': '生成',
-            preview: {
-                error: '小说数据加载失败',
-                loading: '加载中...',
-            }
         },
         'novel-api-error': {
             header: '合并下载多篇小说',

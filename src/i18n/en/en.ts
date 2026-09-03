@@ -32,6 +32,10 @@ export default {
                     ok: 'OK',
                     cancel: 'Cancel',
                 },
+                disable: {
+                    'no-novels': 'Please add some novels before downloading',
+                    'filter-mode': 'Please exit filter mode before downloading',
+                }
             },
             input: {
                 label: 'Add Novel',
@@ -63,12 +67,27 @@ export default {
             },
             list: {
                 label: 'Novel List ({total})',
+                'label-filter': 'Filter Mode ({preserved}/{total})',
+                filter: {
+                    'include-title': 'Title contains',
+                    'exclude-title': 'Title does not contain',
+                    'include-tag': 'Has tag',
+                    'exclude-tag': 'Has no tag',
+                    favorite: {
+                        label: 'Favorite status',
+                        include: 'Favorited',
+                        exclude: 'Not favorited',
+                    },
+                },
+                preview: {
+                    error: 'Failed to load novel data',
+                    loading: 'Loading...',
+                },
+                empty: 'The book list is empty. Add some novels on the left first',
+                'no-filter': 'Please add some filter conditions first',
+                'filter-not-loaded': '{count} novel has not finished loading. Please wait for it to finish before submitting the filter results | {count} novels have not finished loading. Please wait for them to finish before submitting the filter results',
             },
             'calc-filename': 'Generate',
-            preview: {
-                error: 'Failed to load novel data',
-                loading: 'Loading...',
-            }
         },
         'novel-api-error': {
             header: 'Merge Download Multiple Novels',

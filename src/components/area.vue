@@ -3,9 +3,10 @@
 <script setup lang="ts">
 const {} = defineProps<{
     /**
-     * 标签文字
+     * 标签文字  
+     * 如有`#label`插槽内容传入则忽略此属性值
      */
-    label: string;
+    label?: string;
     /**
      * 边框及标签文字颜色
      */
@@ -50,6 +51,7 @@ const {} = defineProps<{
 
             <!-- 文字标签 -->
             <div
+                v-if="$slots.label || label"
                 class="
                     absolute top-0 left-5 z-2
                     w-fit h-10 px-3
@@ -59,7 +61,9 @@ const {} = defineProps<{
                     color: color,
                     backgroundColor: bgColor,
                 }"
-            >{{ label }}</div>
+            >
+                <slot name="label">{{ label }}</slot>
+            </div>
         </div>
     </div>
 </template>

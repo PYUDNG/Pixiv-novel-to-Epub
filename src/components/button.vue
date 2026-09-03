@@ -1,6 +1,6 @@
 <!-- 按钮组件 -->
 <script setup lang="ts">
-import { globalLogger, Nullable, PromiseOrRaw, SingleOrArray } from '@/utils';
+import { alert, globalLogger, Nullable, PromiseOrRaw, SingleOrArray } from '@/utils';
 import type { Severity } from './types';
 import { computed } from 'vue';
 import type { Component } from 'vue';
@@ -49,7 +49,7 @@ export interface ButtonProps {
      * 是否禁用
      * @default false
      */
-    disabled?: boolean;
+    disabled?: boolean | string;
 
     /**
      * 按钮回调  
@@ -130,7 +130,7 @@ async function onClick(this: HTMLElement, e: PointerEvent) {
         "
         :class="[
             stylingClass,
-            disabled ? 'pointer-events-none' : '',
+            (disabled || typeof disabled === 'string') ? 'pointer-events-none' : '',
             padding,
         ]"
         @click="onClick"
@@ -150,14 +150,17 @@ async function onClick(this: HTMLElement, e: PointerEvent) {
 
         <!-- disabled遮罩 -->
         <div
-            v-if="disabled"
+            v-if="(disabled || typeof disabled === 'string')"
             class="
                 absolute left-0 top-0 w-full h-full z-1
                 bg-transparent
-                backdrop-brightness-70 cursor-not-allowed
+                cursor-not-allowed
                 pointer-events-auto
             "
-            @click.stop
+            :class="{
+                'backdrop-brightness-70': ['filled', 'outline'].includes(type)
+            }"
+            @click.stop="typeof disabled === 'string' && alert(disabled)"
         ></div>
     </div>
 </template>

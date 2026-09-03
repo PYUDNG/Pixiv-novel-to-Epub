@@ -110,6 +110,7 @@ function toggle(visible?: boolean) {
             border border-solid border-surface-300 dark:border-surface-700
             focus-visible:outline-none focus-visible:border-primary-400
             p-2 overflow-visible
+            cursor-pointer
         "
         :title="label"
         @click="toggle()"
@@ -129,7 +130,7 @@ function toggle(visible?: boolean) {
         <div
             v-show="dropdownVisible"
             class="
-                absolute top-full -left-px
+                absolute top-full -left-px z-1
                 flex flex-col justify-start items-stretch
                 text-surface-800 dark:text-surface-200
                 border border-solid border-surface-300 dark:border-surface-700
@@ -142,7 +143,9 @@ function toggle(visible?: boolean) {
                 class="
                     flex flex-row justify-start items-center
                     p-2
-                    hover:bg-[rgba(0,0,0,0.2)] dark:hover:bg-[rgba(255,255,255,0.1)]
+                    bg-surface-100 dark:bg-surface-900
+                    hover:bg-[color-mix(in_srgb,var(--color-surface-100),black_10%)]
+                    hover:dark:bg-[color-mix(in_srgb,var(--color-surface-900),white_10%)]
                 "
                 @click="select(option.value)"
             >{{ option.label }}</div>

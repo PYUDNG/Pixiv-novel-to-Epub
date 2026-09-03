@@ -10,6 +10,7 @@ export interface NovelAPITags {
         deletable: boolean;
         userId: string;
         userName: string;
+        /** pixiv语言代码 - 翻译内容 键值对组成的对象 */
         translation?: {
             [i18n: string]: string;
         }
@@ -101,11 +102,17 @@ export interface NovelEmbeddedImage {
     }
 }
 
+export interface NovelBookmarkData {
+    id: number;
+    private: boolean;
+}
+
 /**
  * 非详尽的 pixiv novel api 返回值 body 类型
  */
 export interface NovelAPIBody {
     bookmarkCount: number;
+    bookmarkData: Nullable<NovelBookmarkData>;
     commentCount: number;
     createDate: string;
     uploadDate: string;
