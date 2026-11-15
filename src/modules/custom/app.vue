@@ -4,7 +4,7 @@
 import { AbortSymbol, SingleOrArray } from '@/utils';
 import { BUTTON_CONTROLLER_KEY } from '@/utils/helpers/popup/dialog/dialog';
 import { inject, reactive, ref, watch } from 'vue';
-import { novel } from '../api/index.ts';
+import { novel, RetriedAPIError } from '../api/index.ts';
 import type { NovelData } from './utils.ts';
 import BookList from './book-list/book-list.vue';
 import DownloadOptions, { type DownloadOptions as IDownloadOptions } from './download-options/download-options.vue';
@@ -110,9 +110,12 @@ function load(id: string) {
                 Object.assign(data, dataBak);
             }
         }
-    }).catch(_err => {
+    }).catch(err => {
         // 加载失败，标记错误状态
-        data.error = true;
+        if (err instanceof RetriedAPIError)
+            data.error = err;
+        else
+            data.error = true;
     });
 }
 // #endregion

@@ -81,6 +81,7 @@ export default {
                 },
                 preview: {
                     error: 'Failed to load novel data',
+                    apiError: 'Failed to load novel data: {message}',
                     loading: 'Loading...',
                 },
                 empty: 'The book list is empty. Add some novels on the left first',

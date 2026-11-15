@@ -81,6 +81,7 @@ export default {
                 },
                 preview: {
                     error: '小说数据加载失败',
+                    apiError: '小说数据加载失败：{message}',
                     loading: '加载中...',
                 },
                 empty: '书单是空的，先在左侧添加一些小说吧',

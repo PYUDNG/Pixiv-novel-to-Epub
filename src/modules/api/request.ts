@@ -21,11 +21,52 @@ const queue = new Queue();
  */
 const cache = new Map<string, any>();
 
+/**
+ * API错误
+ */
+export class APIError extends Error {
+    /**
+     * 
+     * @param message 常规错误对象消息
+     * @param status API status code
+     * @param errorMessage pixiv api返回的`.message`字符串
+     */
+    constructor(
+        message: string,
+        public readonly status?: number,
+        public readonly errorMessage?: string,
+    ) {
+        super(message);
+        this.name = 'APIError';
+    }
+}
+
+/**
+ * 多次重试中的多个API错误
+ */
+export class RetriedAPIError extends Error {
+    /**
+     * 
+     * @param message 常规错误对象消息
+     * @param errors 多个API错误
+     */
+    constructor(
+        message: string,
+        public readonly errors: APIError[],
+    ) {
+        super(message);
+        this.name = 'RetriedAPIError';
+    }
+}
+
 export const api = async <
     T = JsonValue,
 >(
     ...args: Parameters<typeof _api>
 ): Promise<T | typeof AbortSymbol> => {
+    // 记录错误数据
+    const errs: APIError[] = [];
+
     // 带错误重试地排队执行请求
     for (let n = 1; n <= MAX_API_TRIES; n++) {
         try {
@@ -37,6 +78,12 @@ export const api = async <
             if (err === AbortSymbol) return AbortSymbol;
             if (lastArg instanceof AbortSignal && lastArg.aborted) return AbortSymbol;
 
+            // 记录错误
+            if (err instanceof APIError)
+                errs.push(err);
+            else
+                logger.simple('Error', 'Invalid error type');
+
             // 错误重试，直到尝试次数用尽
             logger.simple('Error', `api request error (try #${n})`);
             logger.asLevel('Error', err);
@@ -44,7 +91,7 @@ export const api = async <
     }
 
     // 用尽尝试次数依然报错，抛出错误
-    throw new Error('error after all retries');
+    throw new RetriedAPIError('error after all retries', errs);
 }
 
 // 定义任意JSON类型API返回值
@@ -82,7 +129,7 @@ async function _api<
     if (cache.has(url)) return cache.get(url);
 
     // 执行请求
-    let result: T, error: any = null;
+    let result: T, status!: number;
     try {
         result = await requestJson({
             method: 'GET', url,
@@ -91,21 +138,17 @@ async function _api<
                 host: PIXIV_HOST,
             },
             onload(response) {
-                if (response.status >= 400)
-                    error = response;
-                // 模拟出错情形
-                //else
-                //    error = 'Mock Error';
+                status = response.status;
             }
         }, signal);
 
         // 检查pixiv api 错误标志键
         if (hasErrorProp(result) && result.error)
-            throw Error(`api returned error: ${ result.message }`);
-
-        // 检查是否有请求错误
-        if (error)
-            throw Error(`api status code error: ${ error }`);
+            throw new APIError(`api error: ${ result.message }`, status, result.message);
+        
+        // 状态码 >= 400
+        if (status >= 400)
+            throw new APIError(`api error: ${ status }`, status);
 
         // 存缓存
         cache.set(url, result);

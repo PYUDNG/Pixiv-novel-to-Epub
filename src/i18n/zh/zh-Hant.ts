@@ -81,6 +81,7 @@ export default {
                 },
                 preview: {
                     error: '小說資料載入失敗',
+                    apiError: '小說資料載入失敗：{message}',
                     loading: '載入中...',
                 },
                 empty: '書單是空的，先在左側新增一些小說吧',

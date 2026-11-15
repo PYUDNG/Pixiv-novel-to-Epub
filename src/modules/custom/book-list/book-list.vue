@@ -18,6 +18,7 @@ import ExcludeTag from './filter-input/exclude-tag.vue';
 import IncludeTitle from './filter-input/include-title.vue';
 import ExcludeTitle from './filter-input/exclude-title.vue';
 import Favorite from './filter-input/favorite.vue';
+import { RetriedAPIError } from '@/modules/api/request.ts';
 
 const { t } = useI18n();
 const $list = i18nKeys.$custom.$input.$list;
@@ -87,6 +88,34 @@ function backward(id: string) {
 function reload(id: string) {
     if (novels.every(n => n.id !== id)) throw new Error(`attempt to reload novel (${ id }) that is not in novels list`);
     emit('reload', id);
+}
+
+/**
+ * 获取已加载小说的展示属性  
+ * 包含 `//` 的值（如 URL）必须在这里构造。Volar 3.3.12+ 在展平组件的
+ * inference-only props 时，会把模板属性中的 `//` 误当成行注释，生成非法 TS，
+ * 导致整个模板的类型收窄失效（vuejs/language-tools#6322）。
+ * @param novel 小说数据
+ * @param num 序号
+ */
+function bookProps(novel: NovelData, num: number) {
+    const data = novel.data;
+    if (data === null) throw new Error(`novel (${ novel.id }) data is not loaded`);
+
+    const body = data.body;
+    return {
+        id: body.id,
+        num,
+        cover: body.coverUrl,
+        title: body.title,
+        desc: body.description,
+        url: body.extraData.meta.canonical,
+        author: {
+            name: body.userName,
+            avatar: Object.values(body.userNovels).find(n => n?.profileImageUrl)?.profileImageUrl ?? null,
+            url: `https://www.pixiv.net/users/${ body.userId }`,
+        },
+    };
 }
 // #endregion
 
@@ -320,7 +349,10 @@ watch(filterMode, mode => {
                             "
                             @click="reload(novel.id)"
                         >
-                            <div>{{ t($list.$preview.$error) }}</div>
+                            <div>{{ novel.error instanceof RetriedAPIError ?
+                                t($list.$preview.$apiError, { message: novel.error.errors[0].errorMessage || novel.error.errors[0].status }) :
+                                t($list.$preview.$error)
+                            }}</div>
                             <MaterialSymbolsRefresh />
                             <MaterialSymbolsClose @click.stop="$emit('remove', novel.id)" />
                         </div>
@@ -342,17 +374,7 @@ watch(filterMode, mode => {
                         <Book
                             v-else-if="novel.data !== null"
                             class="h-45"
-                            :id="novel.data.body.id"
-                            :num="i+1"
-                            :cover="novel.data.body.coverUrl"
-                            :title="novel.data.body.title"
-                            :desc="novel.data.body.description"
-                            :url="novel.data.body.extraData.meta.canonical"
-                            :author="{
-                                name: novel.data.body.userName,
-                                avatar: Object.values(novel.data.body.userNovels).find(n => n?.profileImageUrl)?.profileImageUrl ?? null,
-                                url: `https://www.pixiv.net/users/${ novel.data.body.userId }`,
-                            }"
+                            v-bind="bookProps(novel, i + 1)"
                             :movable="!filterMode"
                             @remove="remove"
                             @forward="forward"

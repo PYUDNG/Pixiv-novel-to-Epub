@@ -1,5 +1,6 @@
 import type { Nullable } from "@/utils";
 import { PixivNovelAPIResponse } from "../api/novel/types";
+import { RetriedAPIError } from "../api";
 
 /**
  * 加载出错标志
@@ -10,7 +11,7 @@ export interface NovelData {
     id: string;
     loading: boolean;
     promise: Promise<Nullable<PixivNovelAPIResponse>>;
-    error: boolean;
+    error: boolean | RetriedAPIError;
     data: Nullable<PixivNovelAPIResponse>;
 }
 
